@@ -2,6 +2,8 @@ import time
 import tracemalloc
 import heapq
 from copy import deepcopy
+import psutil
+import os
 
 class Sudoku:
     def __init__(self, testcase):
@@ -11,6 +13,7 @@ class Sudoku:
         self.time = 0       # Execution time
         self.memory = 0     # Memory usage
         self.output_file = 'output/output_' + testcase  # File to save output
+        self.solving_steps = []  # Store solving steps for visualization
 
     def write_to_file(self, message):
         """Write a message to the output file."""
@@ -69,25 +72,26 @@ class Sudoku:
         """Solve the Sudoku puzzle using Backtracking."""
         empty_cell = self.find_empty_cell()
         if not empty_cell:
-            return True  # Solved
+            return True
+        
         row, col = empty_cell
 
-        for num in range(1, 10):  # Try numbers from 1 to 9
+        for num in range(1, 10):
             if self.is_valid(num, (row, col)):
-                self.board[row][col] = num  # Place valid number
-                self.num_steps += 1   # Increment step count
+                self.board[row][col] = num
+                self.num_steps += 1
+                
+                # Log the step and current board state
                 self.write_to_file(f"Step {self.num_steps}: Placed {num} at ({row}, {col})")
                 self.print_board()
 
-                if self.solve_by_DFS():  # Recursively solve
+                if self.solve_by_DFS():
                     return True
 
-                self.board[row][col] = 0  # Backtrack: Remove number
-                self.write_to_file(f"Backtrack: Removed {num} from ({row}, {col})")
-                self.num_steps += 1   # Count backtracking step
-                self.print_board()
+                # Backtrack
+                self.board[row][col] = 0
 
-        return False  # No solution found
+        return False
 
     def solve_by_A_star(self):
         """Solve the Sudoku puzzle using A* search."""
@@ -151,7 +155,7 @@ class Sudoku:
                 # Add new state to open set
                 heapq.heappush(open_set, (f_score, g_score, new_board, new_remaining))
                 
-                # Log the step
+                # Only log when we actually place a number
                 self.write_to_file(f"Step {g_score}: Placed {num} at ({row}, {col})")
                 self.print_board(new_board)
         
@@ -187,44 +191,38 @@ class Sudoku:
         """Heuristic for A* search: count the number of empty cells."""
         return sum(row.count(0) for row in board)
 
-    def solver(self, opt=None):
-        with open(self.output_file, "w") as file:  # Clear output file
-            file.write("")
-
+    def solver(self, algorithm='DFS'):
+        """Solve the Sudoku puzzle using the specified algorithm."""
+        # Reset step counter
+        self.num_steps = 0
+        
+        # Write initial board state to file
         self.write_to_file("Initial Sudoku board:")
         self.print_board()
+        
+        # Solve using specified algorithm
+        start_time = time.time()
+        if algorithm == 'DFS':
+            solved = self.solve_by_DFS()
+        else:  # A*
+            solved = self.solve_by_A_star()
+        end_time = time.time()
+        
+        # Write solution details
+        if solved:
+            self.write_to_file(f"\nSolved Sudoku board ({algorithm}):")
+            self.print_board()
+            self.write_to_file(f"\nNumber of steps: {self.num_steps}")
+            self.write_to_file(f"Execution time: {end_time - start_time:.4f} seconds")
+            self.write_to_file(f"Memory usage: {self.get_memory_usage():.2f} KB\n")
+        
+        return solved
 
-        tracemalloc.start()  # Start memory tracking
-        start_time = time.time()  # Start time tracking
-
-        if opt == 'DFS':
-            if self.solve_by_DFS():
-                self.time = time.time() - start_time  # Calculate execution time
-                self.memory = tracemalloc.get_traced_memory()[1]  # Get peak memory usage
-                tracemalloc.stop()  # Stop memory tracking
-
-                self.write_to_file("\nSolved Sudoku board (DFS):")
-                self.print_board()
-                self.write_to_file(f"\nNumber of steps: {self.num_steps}")
-                self.write_to_file(f"Execution time: {self.time:.4f} seconds")
-                self.write_to_file(f"Memory usage: {self.memory / 1024:.2f} KB")
-            else:
-                self.write_to_file("\nNo solution found using DFS.")
-        elif opt == 'A*':
-            if self.solve_by_A_star():
-                self.time = time.time() - start_time  # Calculate execution time
-                self.memory = tracemalloc.get_traced_memory()[1]  # Get peak memory usage
-                tracemalloc.stop()  # Stop memory tracking
-
-                self.write_to_file("\nSolved Sudoku board (A*):")
-                self.print_board()
-                self.write_to_file(f"\nNumber of steps: {self.num_steps}")
-                self.write_to_file(f"Execution time: {self.time:.4f} seconds")
-                self.write_to_file(f"Memory usage: {self.memory / 1024:.2f} KB")
-            else:
-                self.write_to_file("\nNo solution found using A*.")
-        else:
-            self.write_to_file("\nInvalid algorithm selected.")
+    def get_memory_usage(self):
+        """Get the current memory usage in KB"""
+        process = psutil.Process(os.getpid())
+        memory_info = process.memory_info()
+        return memory_info.rss / 1024  # Convert bytes to KB
 
 if __name__ == '__main__':
     sudoku = Sudoku("tc2")
