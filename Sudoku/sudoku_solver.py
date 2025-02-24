@@ -106,12 +106,12 @@ class Sudoku:
         
         while open_set:
             f_score, steps, current_board, remaining_cells = heapq.heappop(open_set)
-            board_str = str(current_board)
+            board_tuple = tuple(tuple(row) for row in current_board)
             
-            if board_str in visited:
+            if board_tuple in visited:
                 continue
                 
-            visited.add(board_str)
+            visited.add(board_tuple)
             self.num_steps = steps
             
             # If no empty cells remain, we've found a solution
