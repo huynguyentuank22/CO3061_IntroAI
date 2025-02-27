@@ -690,6 +690,6 @@ Solved Sudoku board (A*):
 
 
 Number of steps: 51
-Execution time: 0.0346 seconds
-Memory usage: 48452.00 KB
+Execution time: 0.0351 seconds
+Memory usage: 61100.00 KB
 
