@@ -1,0 +1,235 @@
+=== ULTIMATE BOARD STATE ===
+Current player: X
+Active board: (0, 0)
+
+ .  .  . | .  .  . | .  .  . 
+ .  X  . | .  .  . | .  .  . 
+ .  .  X | .  .  . | .  .  . 
+-----------------------------
+ .  .  . | O  .  . | .  .  . 
+ .  .  . | .  .  . | .  .  . 
+ .  .  . | .  .  . | .  .  . 
+-----------------------------
+ .  .  . | .  .  . | O  .  . 
+ .  .  . | .  .  . | .  .  . 
+ .  .  . | .  .  . | .  .  . 
+
+Small boards won:
+ -  -  - 
+ -  -  - 
+ -  -  - 
+===========================
+
+# MINIMAX DECISION PROCESS (DEPTH=1)
+Current player: X
+Evaluating 7 possible moves
+
+Testing move: b(0,0)->c(0,0)
+  → Initial position value: 3
+  → Opponent has 70 possible responses
+    • Response b(0,1)->c(0,0): Score: 3
+    • Response b(0,1)->c(0,1): Score: 3
+    • Response b(0,1)->c(0,2): Score: 3
+    • Response b(0,1)->c(1,0): Score: 3
+    • Response b(0,1)->c(1,1): Score: 3
+    • Response b(0,1)->c(1,2): Score: 3
+    • Response b(0,1)->c(2,0): Score: 3
+    • Response b(0,1)->c(2,1): Score: 3
+    • Response b(0,1)->c(2,2): Score: 3
+    • Response b(0,2)->c(0,0): Score: 3
+    • Response b(0,2)->c(0,1): Score: 3
+    • Response b(0,2)->c(0,2): Score: 3
+    • Response b(0,2)->c(1,0): Score: 3
+    • Response b(0,2)->c(1,1): Score: 3
+    • Response b(0,2)->c(1,2): Score: 3
+    • Response b(0,2)->c(2,0): Score: 3
+    • Response b(0,2)->c(2,1): Score: 3
+    • Response b(0,2)->c(2,2): Score: 3
+    • Response b(1,0)->c(0,0): Score: 3
+    • Response b(1,0)->c(0,1): Score: 3
+    • Response b(1,0)->c(0,2): Score: 3
+    • Response b(1,0)->c(1,0): Score: 3
+    • Response b(1,0)->c(1,1): Score: 3
+    • Response b(1,0)->c(1,2): Score: 3
+    • Response b(1,0)->c(2,0): Score: 3
+    • Response b(1,0)->c(2,1): Score: 3
+    • Response b(1,0)->c(2,2): Score: 3
+    • Response b(1,1)->c(0,1): Score: 3
+    • Response b(1,1)->c(0,2): Score: 3
+    • Response b(1,1)->c(1,0): Score: 3
+    • Response b(1,1)->c(1,1): Score: 3
+    • Response b(1,1)->c(1,2): Score: 3
+    • Response b(1,1)->c(2,0): Score: 3
+    • Response b(1,1)->c(2,1): Score: 3
+    • Response b(1,1)->c(2,2): Score: 3
+    • Response b(1,2)->c(0,0): Score: 3
+    • Response b(1,2)->c(0,1): Score: 3
+    • Response b(1,2)->c(0,2): Score: 3
+    • Response b(1,2)->c(1,0): Score: 3
+    • Response b(1,2)->c(1,1): Score: 3
+    • Response b(1,2)->c(1,2): Score: 3
+    • Response b(1,2)->c(2,0): Score: 3
+    • Response b(1,2)->c(2,1): Score: 3
+    • Response b(1,2)->c(2,2): Score: 3
+    • Response b(2,0)->c(0,0): Score: 3
+    • Response b(2,0)->c(0,1): Score: 3
+    • Response b(2,0)->c(0,2): Score: 3
+    • Response b(2,0)->c(1,0): Score: 3
+    • Response b(2,0)->c(1,1): Score: 3
+    • Response b(2,0)->c(1,2): Score: 3
+    • Response b(2,0)->c(2,0): Score: 3
+    • Response b(2,0)->c(2,1): Score: 3
+    • Response b(2,0)->c(2,2): Score: 3
+    • Response b(2,1)->c(0,0): Score: 3
+    • Response b(2,1)->c(0,1): Score: 3
+    • Response b(2,1)->c(0,2): Score: 3
+    • Response b(2,1)->c(1,0): Score: 3
+    • Response b(2,1)->c(1,1): Score: 3
+    • Response b(2,1)->c(1,2): Score: 3
+    • Response b(2,1)->c(2,0): Score: 3
+    • Response b(2,1)->c(2,1): Score: 3
+    • Response b(2,1)->c(2,2): Score: 3
+    • Response b(2,2)->c(0,1): Score: 3
+    • Response b(2,2)->c(0,2): Score: 3
+    • Response b(2,2)->c(1,0): Score: 3
+    • Response b(2,2)->c(1,1): Score: 3
+    • Response b(2,2)->c(1,2): Score: 3
+    • Response b(2,2)->c(2,0): Score: 3
+    • Response b(2,2)->c(2,1): Score: 3
+    • Response b(2,2)->c(2,2): Score: 3
+  → Opponent's best response: b(0,1)->c(0,0)
+  → Final move score: 3
+  → New best move found! Score: 3
+
+Testing move: b(0,0)->c(0,1)
+  → Initial position value: 0
+  → Opponent has 9 possible responses
+    • Response b(0,1)->c(0,0): Score: 0
+    • Response b(0,1)->c(0,1): Score: 0
+    • Response b(0,1)->c(0,2): Score: 0
+    • Response b(0,1)->c(1,0): Score: 0
+    • Response b(0,1)->c(1,1): Score: 0
+    • Response b(0,1)->c(1,2): Score: 0
+    • Response b(0,1)->c(2,0): Score: 0
+    • Response b(0,1)->c(2,1): Score: 0
+    • Response b(0,1)->c(2,2): Score: 0
+  → Opponent's best response: b(0,1)->c(0,0)
+  → Final move score: 0
+  → Not better than current best (3)
+
+Testing move: b(0,0)->c(0,2)
+  → Initial position value: 0
+  → Opponent has 9 possible responses
+    • Response b(0,2)->c(0,0): Score: 0
+    • Response b(0,2)->c(0,1): Score: 0
+    • Response b(0,2)->c(0,2): Score: 0
+    • Response b(0,2)->c(1,0): Score: 0
+    • Response b(0,2)->c(1,1): Score: 0
+    • Response b(0,2)->c(1,2): Score: 0
+    • Response b(0,2)->c(2,0): Score: 0
+    • Response b(0,2)->c(2,1): Score: 0
+    • Response b(0,2)->c(2,2): Score: 0
+  → Opponent's best response: b(0,2)->c(0,0)
+  → Final move score: 0
+  → Not better than current best (3)
+
+Testing move: b(0,0)->c(1,0)
+  → Initial position value: 0
+  → Opponent has 9 possible responses
+    • Response b(1,0)->c(0,0): Score: 0
+    • Response b(1,0)->c(0,1): Score: 0
+    • Response b(1,0)->c(0,2): Score: 0
+    • Response b(1,0)->c(1,0): Score: 0
+    • Response b(1,0)->c(1,1): Score: 0
+    • Response b(1,0)->c(1,2): Score: 0
+    • Response b(1,0)->c(2,0): Score: 0
+    • Response b(1,0)->c(2,1): Score: 0
+    • Response b(1,0)->c(2,2): Score: 0
+  → Opponent's best response: b(1,0)->c(0,0)
+  → Final move score: 0
+  → Not better than current best (3)
+
+Testing move: b(0,0)->c(1,2)
+  → Initial position value: 0
+  → Opponent has 9 possible responses
+    • Response b(1,2)->c(0,0): Score: 0
+    • Response b(1,2)->c(0,1): Score: 0
+    • Response b(1,2)->c(0,2): Score: 0
+    • Response b(1,2)->c(1,0): Score: 0
+    • Response b(1,2)->c(1,1): Score: 0
+    • Response b(1,2)->c(1,2): Score: 0
+    • Response b(1,2)->c(2,0): Score: 0
+    • Response b(1,2)->c(2,1): Score: 0
+    • Response b(1,2)->c(2,2): Score: 0
+  → Opponent's best response: b(1,2)->c(0,0)
+  → Final move score: 0
+  → Not better than current best (3)
+
+Testing move: b(0,0)->c(2,0)
+  → Initial position value: 0
+  → Opponent has 9 possible responses
+    • Response b(2,0)->c(0,0): Score: 0
+    • Response b(2,0)->c(0,1): Score: 0
+    • Response b(2,0)->c(0,2): Score: 0
+    • Response b(2,0)->c(1,0): Score: 0
+    • Response b(2,0)->c(1,1): Score: 0
+    • Response b(2,0)->c(1,2): Score: 0
+    • Response b(2,0)->c(2,0): Score: 0
+    • Response b(2,0)->c(2,1): Score: 0
+    • Response b(2,0)->c(2,2): Score: 0
+  → Opponent's best response: b(2,0)->c(0,0)
+  → Final move score: 0
+  → Not better than current best (3)
+
+Testing move: b(0,0)->c(2,1)
+  → Initial position value: 0
+  → Opponent has 9 possible responses
+    • Response b(2,1)->c(0,0): Score: 0
+    • Response b(2,1)->c(0,1): Score: 0
+    • Response b(2,1)->c(0,2): Score: 0
+    • Response b(2,1)->c(1,0): Score: 0
+    • Response b(2,1)->c(1,1): Score: 0
+    • Response b(2,1)->c(1,2): Score: 0
+    • Response b(2,1)->c(2,0): Score: 0
+    • Response b(2,1)->c(2,1): Score: 0
+    • Response b(2,1)->c(2,2): Score: 0
+  → Opponent's best response: b(2,1)->c(0,0)
+  → Final move score: 0
+  → Not better than current best (3)
+
+FINAL DECISION: b(0,0)->c(0,0) with score 3
+# MINIMAX DECISION TREE VISUALIZATION
+Root (X to move)
+│
+├── b(0,0)->c(0,0) [score: 3] (BEST)
+│   ├── b(0,1)->c(0,0) [score: 3]
+│   ├── b(0,1)->c(0,1) [score: 3]
+│   └── b(0,1)->c(0,2) [score: 3]
+│   └── ...
+├── b(0,0)->c(0,1) [score: 0]
+│   ├── b(0,1)->c(0,0) [score: 0]
+│   ├── b(0,1)->c(0,1) [score: 0]
+│   └── b(0,1)->c(0,2) [score: 0]
+│   └── ...
+├── b(0,0)->c(0,2) [score: 0]
+│   ├── b(0,2)->c(0,0) [score: 0]
+│   ├── b(0,2)->c(0,1) [score: 0]
+│   └── b(0,2)->c(0,2) [score: 0]
+│   └── ...
+├── b(0,0)->c(1,0) [score: 0]
+│   ├── b(1,0)->c(0,0) [score: 0]
+│   ├── b(1,0)->c(0,1) [score: 0]
+│   └── b(1,0)->c(0,2) [score: 0]
+│   └── ...
+└── b(0,0)->c(1,2) [score: 0]
+    ├── b(1,2)->c(0,0) [score: 0]
+    ├── b(1,2)->c(0,1) [score: 0]
+    └── b(1,2)->c(0,2) [score: 0]
+    └── ...
+
+# EXPLANATION OF MOVE SELECTION
+The minimax algorithm chose move b(0,0)->c(0,0) with score 3 because:
+1. This move completes a diagonal line in the top-left small board (0,0)
+2. Winning a small board gives a score of +3 points
+3. No opponent response can undo this advantage
+4. This creates a permanent strategic advantage

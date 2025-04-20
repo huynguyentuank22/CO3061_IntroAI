@@ -1,5 +1,33 @@
-0 . 4 . .
-. 4 6 . 2
-. . . . 1
-3 . 3 . 2
-. . . . .
+2 . 1
+. 4 .
+1 2 .
+DFS
+Steps: 119892
+Time elapsed: 9.088218688964844 seconds
+Memory usage: 16.34375 MB
+Solved Board:
+1 1 1 0
+1 0 1 0
+0 0 1 0
+0 0 0 0
+
+BFS
+Steps: 250962
+Time elapsed: 9.696228742599487 seconds
+Memory usage: 22.828125 MB
+Solved Board:
+1 1 1 1
+1 1 0 0
+0 0 1 0
+0 0 0 0
+
+
+BFS
+Steps: 176214
+Time elapsed: 9.538520812988281 seconds
+Memory usage: 22.8359375 MB
+Solved Board:
+1 1 1 0
+0 0 0 0
+0 0 0 1
+0 0 0 0

@@ -1,0 +1,1592 @@
+Best move for X: position (0,2)
+
+--- DETAILED MINIMAX DECISION PROCESS ---
+
+[START] STARTING MINIMAX DECISION PROCESS
+[BOARD] Initial board state:
+  | X | O |   |
+  |---+---+---|
+  |   | X | O |
+  |---+---+---|
+  |   |   |   |
+[TARGET] Finding best move for player X
+
+[MOVES] Considering moves: ['(0,2)', '(1,0)', '(2,0)', '(2,1)', '(2,2)']
+
+
+[EXAMINE] ROOT EVALUATION: Move (0,2)
+Board after move:
+  | X | O | X |
+  |---+---+---|
+  |   | X | O |
+  |---+---+---|
+  |   |   |   |
+[FINAL] Move (0,2) final value: 1
+  [EXAMINE] Node #1 at depth 0:
+      | X | O | X |
+    |---+---+---|
+    |   | X | O |
+    |---+---+---|
+    |   |   |   |
+  [MIN] MIN (O) player's turn
+  [MOVES] Valid moves: ['(1,0)', '(2,0)', '(2,1)', '(2,2)']
+  [INIT] Starting with min_eval = ∞, α = -inf, β = inf
+  [TRY] Trying move at (1,0) for O
+    [EXAMINE] Node #2 at depth 1:
+          | X | O | X |
+      |---+---+---|
+      | O | X | O |
+      |---+---+---|
+      |   |   |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(2,0)', '(2,1)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = inf
+    [TRY] Trying move at (2,0) for X
+      [EXAMINE] Node #3 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        | O | X | O |
+        |---+---+---|
+        | X |   |   |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (2,0) evaluation: 1
+    [INCREASE] Updated max_eval: -inf → 1
+    [UPDATE] Updated α: -inf → 1
+    [TRY] Trying move at (2,1) for X
+      [EXAMINE] Node #4 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        | O | X | O |
+        |---+---+---|
+        |   | X |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(2,0)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = 1, β = inf
+      [TRY] Trying move at (2,0) for O
+        [EXAMINE] Node #5 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | O | X | O |
+          |---+---+---|
+          | O | X |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = 1, β = inf
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #6 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | O | X | O |
+            |---+---+---|
+            | O | X | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [MAX] Node #5 returns: 1
+      [RESULT] Move (2,0) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [UPDATE] Updated β: inf → 1
+      [PRUNE] PRUNING! β (1) ≤ α (1)
+         Skipping remaining moves: ['(2,2)']
+      [MIN] Node #4 returns: 1
+    [RESULT] Move (2,1) evaluation: 1
+    [TRY] Trying move at (2,2) for X
+      [EXAMINE] Node #7 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        | O | X | O |
+        |---+---+---|
+        |   |   | X |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (2,2) evaluation: 1
+    [MAX] Node #2 returns: 1
+  [RESULT] Move (1,0) evaluation: 1
+  [DECREASE] Updated min_eval: inf → 1
+  [UPDATE] Updated β: inf → 1
+  [TRY] Trying move at (2,0) for O
+    [EXAMINE] Node #8 at depth 1:
+          | X | O | X |
+      |---+---+---|
+      |   | X | O |
+      |---+---+---|
+      | O |   |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(1,0)', '(2,1)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (1,0) for X
+      [EXAMINE] Node #9 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        | O |   |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(2,1)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = -inf, β = 1
+      [TRY] Trying move at (2,1) for O
+        [EXAMINE] Node #10 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O | O |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #11 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | O | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #10 returns: 1
+      [RESULT] Move (2,1) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [TRY] Trying move at (2,2) for O
+        [EXAMINE] Node #12 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O |   | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,1)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,1) for X
+          [EXAMINE] Node #13 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | O |
+          [MIN] MIN (O) player's turn
+          [UPDATE] Terminal state: Draw, value = 0
+        [RESULT] Move (2,1) evaluation: 0
+        [INCREASE] Updated max_eval: -inf → 0
+        [UPDATE] Updated α: -inf → 0
+        [MAX] Node #12 returns: 0
+      [RESULT] Move (2,2) evaluation: 0
+      [DECREASE] Updated min_eval: 1 → 0
+      [UPDATE] Updated β: 1 → 0
+      [MIN] Node #9 returns: 0
+    [RESULT] Move (1,0) evaluation: 0
+    [INCREASE] Updated max_eval: -inf → 0
+    [UPDATE] Updated α: -inf → 0
+    [TRY] Trying move at (2,1) for X
+      [EXAMINE] Node #14 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        | O | X |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(1,0)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = 0, β = 1
+      [TRY] Trying move at (1,0) for O
+        [EXAMINE] Node #15 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | O | X | O |
+          |---+---+---|
+          | O | X |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = 0, β = 1
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #16 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | O | X | O |
+            |---+---+---|
+            | O | X | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: 0 → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #15 returns: 1
+      [RESULT] Move (1,0) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [TRY] Trying move at (2,2) for O
+        [EXAMINE] Node #17 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          |   | X | O |
+          |---+---+---|
+          | O | X | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(1,0)']
+        [INIT] Starting with max_eval = -∞, α = 0, β = 1
+        [TRY] Trying move at (1,0) for X
+          [EXAMINE] Node #18 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | O |
+          [MIN] MIN (O) player's turn
+          [UPDATE] Terminal state: Draw, value = 0
+        [RESULT] Move (1,0) evaluation: 0
+        [INCREASE] Updated max_eval: -inf → 0
+        [MAX] Node #17 returns: 0
+      [RESULT] Move (2,2) evaluation: 0
+      [DECREASE] Updated min_eval: 1 → 0
+      [UPDATE] Updated β: 1 → 0
+      [PRUNE] PRUNING! β (0) ≤ α (0)
+         Skipping remaining moves: []
+      [MIN] Node #14 returns: 0
+    [RESULT] Move (2,1) evaluation: 0
+    [TRY] Trying move at (2,2) for X
+      [EXAMINE] Node #19 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        | O |   | X |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (2,2) evaluation: 1
+    [INCREASE] Updated max_eval: 0 → 1
+    [UPDATE] Updated α: 0 → 1
+    [PRUNE] PRUNING! β (1) ≤ α (1)
+       Skipping remaining moves: []
+    [MAX] Node #8 returns: 1
+  [RESULT] Move (2,0) evaluation: 1
+  [TRY] Trying move at (2,1) for O
+    [EXAMINE] Node #20 at depth 1:
+          | X | O | X |
+      |---+---+---|
+      |   | X | O |
+      |---+---+---|
+      |   | O |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(1,0)', '(2,0)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (1,0) for X
+      [EXAMINE] Node #21 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        |   | O |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(2,0)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = -inf, β = 1
+      [TRY] Trying move at (2,0) for O
+        [EXAMINE] Node #22 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O | O |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #23 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | O | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #22 returns: 1
+      [RESULT] Move (2,0) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [TRY] Trying move at (2,2) for O
+        [EXAMINE] Node #24 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          |   | O | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,0)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,0) for X
+          [EXAMINE] Node #25 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | X | O | O |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,0) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #24 returns: 1
+      [RESULT] Move (2,2) evaluation: 1
+      [MIN] Node #21 returns: 1
+    [RESULT] Move (1,0) evaluation: 1
+    [INCREASE] Updated max_eval: -inf → 1
+    [UPDATE] Updated α: -inf → 1
+    [PRUNE] PRUNING! β (1) ≤ α (1)
+       Skipping remaining moves: ['(2,0)', '(2,2)']
+    [MAX] Node #20 returns: 1
+  [RESULT] Move (2,1) evaluation: 1
+  [TRY] Trying move at (2,2) for O
+    [EXAMINE] Node #26 at depth 1:
+          | X | O | X |
+      |---+---+---|
+      |   | X | O |
+      |---+---+---|
+      |   |   | O |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(1,0)', '(2,0)', '(2,1)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (1,0) for X
+      [EXAMINE] Node #27 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        |   |   | O |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(2,0)', '(2,1)']
+      [INIT] Starting with min_eval = ∞, α = -inf, β = 1
+      [TRY] Trying move at (2,0) for O
+        [EXAMINE] Node #28 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O |   | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,1)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,1) for X
+          [EXAMINE] Node #29 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | O |
+          [MIN] MIN (O) player's turn
+          [UPDATE] Terminal state: Draw, value = 0
+        [RESULT] Move (2,1) evaluation: 0
+        [INCREASE] Updated max_eval: -inf → 0
+        [UPDATE] Updated α: -inf → 0
+        [MAX] Node #28 returns: 0
+      [RESULT] Move (2,0) evaluation: 0
+      [DECREASE] Updated min_eval: inf → 0
+      [UPDATE] Updated β: 1 → 0
+      [TRY] Trying move at (2,1) for O
+        [EXAMINE] Node #30 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          |   | O | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,0)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 0
+        [TRY] Trying move at (2,0) for X
+          [EXAMINE] Node #31 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | X | O | O |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,0) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (0) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #30 returns: 1
+      [RESULT] Move (2,1) evaluation: 1
+      [MIN] Node #27 returns: 0
+    [RESULT] Move (1,0) evaluation: 0
+    [INCREASE] Updated max_eval: -inf → 0
+    [UPDATE] Updated α: -inf → 0
+    [TRY] Trying move at (2,0) for X
+      [EXAMINE] Node #32 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        | X |   | O |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (2,0) evaluation: 1
+    [INCREASE] Updated max_eval: 0 → 1
+    [UPDATE] Updated α: 0 → 1
+    [PRUNE] PRUNING! β (1) ≤ α (1)
+       Skipping remaining moves: ['(2,1)']
+    [MAX] Node #26 returns: 1
+  [RESULT] Move (2,2) evaluation: 1
+  [MIN] Node #1 returns: 1
+[BEST] New best move: (0,2) with value 1
+
+[EXAMINE] ROOT EVALUATION: Move (1,0)
+Board after move:
+  | X | O |   |
+  |---+---+---|
+  | X | X | O |
+  |---+---+---|
+  |   |   |   |
+[FINAL] Move (1,0) final value: 1
+  [EXAMINE] Node #1 at depth 0:
+      | X | O |   |
+    |---+---+---|
+    | X | X | O |
+    |---+---+---|
+    |   |   |   |
+  [MIN] MIN (O) player's turn
+  [MOVES] Valid moves: ['(0,2)', '(2,0)', '(2,1)', '(2,2)']
+  [INIT] Starting with min_eval = ∞, α = -inf, β = inf
+  [TRY] Trying move at (0,2) for O
+    [EXAMINE] Node #2 at depth 1:
+          | X | O | O |
+      |---+---+---|
+      | X | X | O |
+      |---+---+---|
+      |   |   |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(2,0)', '(2,1)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = inf
+    [TRY] Trying move at (2,0) for X
+      [EXAMINE] Node #3 at depth 2:
+              | X | O | O |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        | X |   |   |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (2,0) evaluation: 1
+    [INCREASE] Updated max_eval: -inf → 1
+    [UPDATE] Updated α: -inf → 1
+    [TRY] Trying move at (2,1) for X
+      [EXAMINE] Node #4 at depth 2:
+              | X | O | O |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        |   | X |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(2,0)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = 1, β = inf
+      [TRY] Trying move at (2,0) for O
+        [EXAMINE] Node #5 at depth 3:
+                  | X | O | O |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O | X |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = 1, β = inf
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #6 at depth 4:
+                      | X | O | O |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [MAX] Node #5 returns: 1
+      [RESULT] Move (2,0) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [UPDATE] Updated β: inf → 1
+      [PRUNE] PRUNING! β (1) ≤ α (1)
+         Skipping remaining moves: ['(2,2)']
+      [MIN] Node #4 returns: 1
+    [RESULT] Move (2,1) evaluation: 1
+    [TRY] Trying move at (2,2) for X
+      [EXAMINE] Node #7 at depth 2:
+              | X | O | O |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        |   |   | X |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (2,2) evaluation: 1
+    [MAX] Node #2 returns: 1
+  [RESULT] Move (0,2) evaluation: 1
+  [DECREASE] Updated min_eval: inf → 1
+  [UPDATE] Updated β: inf → 1
+  [TRY] Trying move at (2,0) for O
+    [EXAMINE] Node #8 at depth 1:
+          | X | O |   |
+      |---+---+---|
+      | X | X | O |
+      |---+---+---|
+      | O |   |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(0,2)', '(2,1)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (0,2) for X
+      [EXAMINE] Node #9 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        | O |   |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(2,1)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = -inf, β = 1
+      [TRY] Trying move at (2,1) for O
+        [EXAMINE] Node #10 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O | O |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #11 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | O | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #10 returns: 1
+      [RESULT] Move (2,1) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [TRY] Trying move at (2,2) for O
+        [EXAMINE] Node #12 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O |   | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,1)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,1) for X
+          [EXAMINE] Node #13 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | O |
+          [MIN] MIN (O) player's turn
+          [UPDATE] Terminal state: Draw, value = 0
+        [RESULT] Move (2,1) evaluation: 0
+        [INCREASE] Updated max_eval: -inf → 0
+        [UPDATE] Updated α: -inf → 0
+        [MAX] Node #12 returns: 0
+      [RESULT] Move (2,2) evaluation: 0
+      [DECREASE] Updated min_eval: 1 → 0
+      [UPDATE] Updated β: 1 → 0
+      [MIN] Node #9 returns: 0
+    [RESULT] Move (0,2) evaluation: 0
+    [INCREASE] Updated max_eval: -inf → 0
+    [UPDATE] Updated α: -inf → 0
+    [TRY] Trying move at (2,1) for X
+      [EXAMINE] Node #14 at depth 2:
+              | X | O |   |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        | O | X |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(0,2)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = 0, β = 1
+      [TRY] Trying move at (0,2) for O
+        [EXAMINE] Node #15 at depth 3:
+                  | X | O | O |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O | X |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = 0, β = 1
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #16 at depth 4:
+                      | X | O | O |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: 0 → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #15 returns: 1
+      [RESULT] Move (0,2) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [TRY] Trying move at (2,2) for O
+        [EXAMINE] Node #17 at depth 3:
+                  | X | O |   |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O | X | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(0,2)']
+        [INIT] Starting with max_eval = -∞, α = 0, β = 1
+        [TRY] Trying move at (0,2) for X
+          [EXAMINE] Node #18 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | O |
+          [MIN] MIN (O) player's turn
+          [UPDATE] Terminal state: Draw, value = 0
+        [RESULT] Move (0,2) evaluation: 0
+        [INCREASE] Updated max_eval: -inf → 0
+        [MAX] Node #17 returns: 0
+      [RESULT] Move (2,2) evaluation: 0
+      [DECREASE] Updated min_eval: 1 → 0
+      [UPDATE] Updated β: 1 → 0
+      [PRUNE] PRUNING! β (0) ≤ α (0)
+         Skipping remaining moves: []
+      [MIN] Node #14 returns: 0
+    [RESULT] Move (2,1) evaluation: 0
+    [TRY] Trying move at (2,2) for X
+      [EXAMINE] Node #19 at depth 2:
+              | X | O |   |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        | O |   | X |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (2,2) evaluation: 1
+    [INCREASE] Updated max_eval: 0 → 1
+    [UPDATE] Updated α: 0 → 1
+    [PRUNE] PRUNING! β (1) ≤ α (1)
+       Skipping remaining moves: []
+    [MAX] Node #8 returns: 1
+  [RESULT] Move (2,0) evaluation: 1
+  [TRY] Trying move at (2,1) for O
+    [EXAMINE] Node #20 at depth 1:
+          | X | O |   |
+      |---+---+---|
+      | X | X | O |
+      |---+---+---|
+      |   | O |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(0,2)', '(2,0)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (0,2) for X
+      [EXAMINE] Node #21 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        |   | O |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(2,0)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = -inf, β = 1
+      [TRY] Trying move at (2,0) for O
+        [EXAMINE] Node #22 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O | O |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #23 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | O | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #22 returns: 1
+      [RESULT] Move (2,0) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [TRY] Trying move at (2,2) for O
+        [EXAMINE] Node #24 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          |   | O | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,0)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,0) for X
+          [EXAMINE] Node #25 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | X | O | O |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,0) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #24 returns: 1
+      [RESULT] Move (2,2) evaluation: 1
+      [MIN] Node #21 returns: 1
+    [RESULT] Move (0,2) evaluation: 1
+    [INCREASE] Updated max_eval: -inf → 1
+    [UPDATE] Updated α: -inf → 1
+    [PRUNE] PRUNING! β (1) ≤ α (1)
+       Skipping remaining moves: ['(2,0)', '(2,2)']
+    [MAX] Node #20 returns: 1
+  [RESULT] Move (2,1) evaluation: 1
+  [TRY] Trying move at (2,2) for O
+    [EXAMINE] Node #26 at depth 1:
+          | X | O |   |
+      |---+---+---|
+      | X | X | O |
+      |---+---+---|
+      |   |   | O |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(0,2)', '(2,0)', '(2,1)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (0,2) for X
+      [EXAMINE] Node #27 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        |   |   | O |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(2,0)', '(2,1)']
+      [INIT] Starting with min_eval = ∞, α = -inf, β = 1
+      [TRY] Trying move at (2,0) for O
+        [EXAMINE] Node #28 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O |   | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,1)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,1) for X
+          [EXAMINE] Node #29 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | O |
+          [MIN] MIN (O) player's turn
+          [UPDATE] Terminal state: Draw, value = 0
+        [RESULT] Move (2,1) evaluation: 0
+        [INCREASE] Updated max_eval: -inf → 0
+        [UPDATE] Updated α: -inf → 0
+        [MAX] Node #28 returns: 0
+      [RESULT] Move (2,0) evaluation: 0
+      [DECREASE] Updated min_eval: inf → 0
+      [UPDATE] Updated β: 1 → 0
+      [TRY] Trying move at (2,1) for O
+        [EXAMINE] Node #30 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          |   | O | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,0)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 0
+        [TRY] Trying move at (2,0) for X
+          [EXAMINE] Node #31 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | X | O | O |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,0) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (0) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #30 returns: 1
+      [RESULT] Move (2,1) evaluation: 1
+      [MIN] Node #27 returns: 0
+    [RESULT] Move (0,2) evaluation: 0
+    [INCREASE] Updated max_eval: -inf → 0
+    [UPDATE] Updated α: -inf → 0
+    [TRY] Trying move at (2,0) for X
+      [EXAMINE] Node #32 at depth 2:
+              | X | O |   |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        | X |   | O |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (2,0) evaluation: 1
+    [INCREASE] Updated max_eval: 0 → 1
+    [UPDATE] Updated α: 0 → 1
+    [PRUNE] PRUNING! β (1) ≤ α (1)
+       Skipping remaining moves: ['(2,1)']
+    [MAX] Node #26 returns: 1
+  [RESULT] Move (2,2) evaluation: 1
+  [MIN] Node #1 returns: 1
+
+[EXAMINE] ROOT EVALUATION: Move (2,0)
+Board after move:
+  | X | O |   |
+  |---+---+---|
+  |   | X | O |
+  |---+---+---|
+  | X |   |   |
+[FINAL] Move (2,0) final value: 1
+  [EXAMINE] Node #1 at depth 0:
+      | X | O |   |
+    |---+---+---|
+    |   | X | O |
+    |---+---+---|
+    | X |   |   |
+  [MIN] MIN (O) player's turn
+  [MOVES] Valid moves: ['(0,2)', '(1,0)', '(2,1)', '(2,2)']
+  [INIT] Starting with min_eval = ∞, α = -inf, β = inf
+  [TRY] Trying move at (0,2) for O
+    [EXAMINE] Node #2 at depth 1:
+          | X | O | O |
+      |---+---+---|
+      |   | X | O |
+      |---+---+---|
+      | X |   |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(1,0)', '(2,1)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = inf
+    [TRY] Trying move at (1,0) for X
+      [EXAMINE] Node #3 at depth 2:
+              | X | O | O |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        | X |   |   |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (1,0) evaluation: 1
+    [INCREASE] Updated max_eval: -inf → 1
+    [UPDATE] Updated α: -inf → 1
+    [TRY] Trying move at (2,1) for X
+      [EXAMINE] Node #4 at depth 2:
+              | X | O | O |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        | X | X |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(1,0)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = 1, β = inf
+      [TRY] Trying move at (1,0) for O
+        [EXAMINE] Node #5 at depth 3:
+                  | X | O | O |
+          |---+---+---|
+          | O | X | O |
+          |---+---+---|
+          | X | X |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = 1, β = inf
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #6 at depth 4:
+                      | X | O | O |
+            |---+---+---|
+            | O | X | O |
+            |---+---+---|
+            | X | X | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [MAX] Node #5 returns: 1
+      [RESULT] Move (1,0) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [UPDATE] Updated β: inf → 1
+      [PRUNE] PRUNING! β (1) ≤ α (1)
+         Skipping remaining moves: ['(2,2)']
+      [MIN] Node #4 returns: 1
+    [RESULT] Move (2,1) evaluation: 1
+    [TRY] Trying move at (2,2) for X
+      [EXAMINE] Node #7 at depth 2:
+              | X | O | O |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        | X |   | X |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (2,2) evaluation: 1
+    [MAX] Node #2 returns: 1
+  [RESULT] Move (0,2) evaluation: 1
+  [DECREASE] Updated min_eval: inf → 1
+  [UPDATE] Updated β: inf → 1
+  [TRY] Trying move at (1,0) for O
+    [EXAMINE] Node #8 at depth 1:
+          | X | O |   |
+      |---+---+---|
+      | O | X | O |
+      |---+---+---|
+      | X |   |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(0,2)', '(2,1)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (0,2) for X
+      [EXAMINE] Node #9 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        | O | X | O |
+        |---+---+---|
+        | X |   |   |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (0,2) evaluation: 1
+    [INCREASE] Updated max_eval: -inf → 1
+    [UPDATE] Updated α: -inf → 1
+    [PRUNE] PRUNING! β (1) ≤ α (1)
+       Skipping remaining moves: ['(2,1)', '(2,2)']
+    [MAX] Node #8 returns: 1
+  [RESULT] Move (1,0) evaluation: 1
+  [TRY] Trying move at (2,1) for O
+    [EXAMINE] Node #10 at depth 1:
+          | X | O |   |
+      |---+---+---|
+      |   | X | O |
+      |---+---+---|
+      | X | O |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(0,2)', '(1,0)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (0,2) for X
+      [EXAMINE] Node #11 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        | X | O |   |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (0,2) evaluation: 1
+    [INCREASE] Updated max_eval: -inf → 1
+    [UPDATE] Updated α: -inf → 1
+    [PRUNE] PRUNING! β (1) ≤ α (1)
+       Skipping remaining moves: ['(1,0)', '(2,2)']
+    [MAX] Node #10 returns: 1
+  [RESULT] Move (2,1) evaluation: 1
+  [TRY] Trying move at (2,2) for O
+    [EXAMINE] Node #12 at depth 1:
+          | X | O |   |
+      |---+---+---|
+      |   | X | O |
+      |---+---+---|
+      | X |   | O |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(0,2)', '(1,0)', '(2,1)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (0,2) for X
+      [EXAMINE] Node #13 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        | X |   | O |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (0,2) evaluation: 1
+    [INCREASE] Updated max_eval: -inf → 1
+    [UPDATE] Updated α: -inf → 1
+    [PRUNE] PRUNING! β (1) ≤ α (1)
+       Skipping remaining moves: ['(1,0)', '(2,1)']
+    [MAX] Node #12 returns: 1
+  [RESULT] Move (2,2) evaluation: 1
+  [MIN] Node #1 returns: 1
+
+[EXAMINE] ROOT EVALUATION: Move (2,1)
+Board after move:
+  | X | O |   |
+  |---+---+---|
+  |   | X | O |
+  |---+---+---|
+  |   | X |   |
+[FINAL] Move (2,1) final value: 0
+  [EXAMINE] Node #1 at depth 0:
+      | X | O |   |
+    |---+---+---|
+    |   | X | O |
+    |---+---+---|
+    |   | X |   |
+  [MIN] MIN (O) player's turn
+  [MOVES] Valid moves: ['(0,2)', '(1,0)', '(2,0)', '(2,2)']
+  [INIT] Starting with min_eval = ∞, α = -inf, β = inf
+  [TRY] Trying move at (0,2) for O
+    [EXAMINE] Node #2 at depth 1:
+          | X | O | O |
+      |---+---+---|
+      |   | X | O |
+      |---+---+---|
+      |   | X |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(1,0)', '(2,0)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = inf
+    [TRY] Trying move at (1,0) for X
+      [EXAMINE] Node #3 at depth 2:
+              | X | O | O |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        |   | X |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(2,0)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = -inf, β = inf
+      [TRY] Trying move at (2,0) for O
+        [EXAMINE] Node #4 at depth 3:
+                  | X | O | O |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O | X |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = inf
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #5 at depth 4:
+                      | X | O | O |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [MAX] Node #4 returns: 1
+      [RESULT] Move (2,0) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [UPDATE] Updated β: inf → 1
+      [TRY] Trying move at (2,2) for O
+        [EXAMINE] Node #6 at depth 3:
+                  | X | O | O |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          |   | X | O |
+        [MAX] MAX (X) player's turn
+        [WIN] Terminal state: O wins, value = -1
+      [RESULT] Move (2,2) evaluation: -1
+      [DECREASE] Updated min_eval: 1 → -1
+      [UPDATE] Updated β: 1 → -1
+      [MIN] Node #3 returns: -1
+    [RESULT] Move (1,0) evaluation: -1
+    [INCREASE] Updated max_eval: -inf → -1
+    [UPDATE] Updated α: -inf → -1
+    [TRY] Trying move at (2,0) for X
+      [EXAMINE] Node #7 at depth 2:
+              | X | O | O |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        | X | X |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(1,0)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = -1, β = inf
+      [TRY] Trying move at (1,0) for O
+        [EXAMINE] Node #8 at depth 3:
+                  | X | O | O |
+          |---+---+---|
+          | O | X | O |
+          |---+---+---|
+          | X | X |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = -1, β = inf
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #9 at depth 4:
+                      | X | O | O |
+            |---+---+---|
+            | O | X | O |
+            |---+---+---|
+            | X | X | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -1 → 1
+        [MAX] Node #8 returns: 1
+      [RESULT] Move (1,0) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [UPDATE] Updated β: inf → 1
+      [TRY] Trying move at (2,2) for O
+        [EXAMINE] Node #10 at depth 3:
+                  | X | O | O |
+          |---+---+---|
+          |   | X | O |
+          |---+---+---|
+          | X | X | O |
+        [MAX] MAX (X) player's turn
+        [WIN] Terminal state: O wins, value = -1
+      [RESULT] Move (2,2) evaluation: -1
+      [DECREASE] Updated min_eval: 1 → -1
+      [UPDATE] Updated β: 1 → -1
+      [PRUNE] PRUNING! β (-1) ≤ α (-1)
+         Skipping remaining moves: []
+      [MIN] Node #7 returns: -1
+    [RESULT] Move (2,0) evaluation: -1
+    [TRY] Trying move at (2,2) for X
+      [EXAMINE] Node #11 at depth 2:
+              | X | O | O |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        |   | X | X |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (2,2) evaluation: 1
+    [INCREASE] Updated max_eval: -1 → 1
+    [UPDATE] Updated α: -1 → 1
+    [MAX] Node #2 returns: 1
+  [RESULT] Move (0,2) evaluation: 1
+  [DECREASE] Updated min_eval: inf → 1
+  [UPDATE] Updated β: inf → 1
+  [TRY] Trying move at (1,0) for O
+    [EXAMINE] Node #12 at depth 1:
+          | X | O |   |
+      |---+---+---|
+      | O | X | O |
+      |---+---+---|
+      |   | X |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(0,2)', '(2,0)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (0,2) for X
+      [EXAMINE] Node #13 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        | O | X | O |
+        |---+---+---|
+        |   | X |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(2,0)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = -inf, β = 1
+      [TRY] Trying move at (2,0) for O
+        [EXAMINE] Node #14 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | O | X | O |
+          |---+---+---|
+          | O | X |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #15 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | O | X | O |
+            |---+---+---|
+            | O | X | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #14 returns: 1
+      [RESULT] Move (2,0) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [TRY] Trying move at (2,2) for O
+        [EXAMINE] Node #16 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | O | X | O |
+          |---+---+---|
+          |   | X | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,0)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,0) for X
+          [EXAMINE] Node #17 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | O | X | O |
+            |---+---+---|
+            | X | X | O |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,0) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #16 returns: 1
+      [RESULT] Move (2,2) evaluation: 1
+      [MIN] Node #13 returns: 1
+    [RESULT] Move (0,2) evaluation: 1
+    [INCREASE] Updated max_eval: -inf → 1
+    [UPDATE] Updated α: -inf → 1
+    [PRUNE] PRUNING! β (1) ≤ α (1)
+       Skipping remaining moves: ['(2,0)', '(2,2)']
+    [MAX] Node #12 returns: 1
+  [RESULT] Move (1,0) evaluation: 1
+  [TRY] Trying move at (2,0) for O
+    [EXAMINE] Node #18 at depth 1:
+          | X | O |   |
+      |---+---+---|
+      |   | X | O |
+      |---+---+---|
+      | O | X |   |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(0,2)', '(1,0)', '(2,2)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (0,2) for X
+      [EXAMINE] Node #19 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        | O | X |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(1,0)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = -inf, β = 1
+      [TRY] Trying move at (1,0) for O
+        [EXAMINE] Node #20 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | O | X | O |
+          |---+---+---|
+          | O | X |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #21 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | O | X | O |
+            |---+---+---|
+            | O | X | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #20 returns: 1
+      [RESULT] Move (1,0) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [TRY] Trying move at (2,2) for O
+        [EXAMINE] Node #22 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          |   | X | O |
+          |---+---+---|
+          | O | X | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(1,0)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (1,0) for X
+          [EXAMINE] Node #23 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | O |
+          [MIN] MIN (O) player's turn
+          [UPDATE] Terminal state: Draw, value = 0
+        [RESULT] Move (1,0) evaluation: 0
+        [INCREASE] Updated max_eval: -inf → 0
+        [UPDATE] Updated α: -inf → 0
+        [MAX] Node #22 returns: 0
+      [RESULT] Move (2,2) evaluation: 0
+      [DECREASE] Updated min_eval: 1 → 0
+      [UPDATE] Updated β: 1 → 0
+      [MIN] Node #19 returns: 0
+    [RESULT] Move (0,2) evaluation: 0
+    [INCREASE] Updated max_eval: -inf → 0
+    [UPDATE] Updated α: -inf → 0
+    [TRY] Trying move at (1,0) for X
+      [EXAMINE] Node #24 at depth 2:
+              | X | O |   |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        | O | X |   |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(0,2)', '(2,2)']
+      [INIT] Starting with min_eval = ∞, α = 0, β = 1
+      [TRY] Trying move at (0,2) for O
+        [EXAMINE] Node #25 at depth 3:
+                  | X | O | O |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O | X |   |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,2)']
+        [INIT] Starting with max_eval = -∞, α = 0, β = 1
+        [TRY] Trying move at (2,2) for X
+          [EXAMINE] Node #26 at depth 4:
+                      | X | O | O |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | X |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,2) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: 0 → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #25 returns: 1
+      [RESULT] Move (0,2) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [TRY] Trying move at (2,2) for O
+        [EXAMINE] Node #27 at depth 3:
+                  | X | O |   |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          | O | X | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(0,2)']
+        [INIT] Starting with max_eval = -∞, α = 0, β = 1
+        [TRY] Trying move at (0,2) for X
+          [EXAMINE] Node #28 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | O |
+          [MIN] MIN (O) player's turn
+          [UPDATE] Terminal state: Draw, value = 0
+        [RESULT] Move (0,2) evaluation: 0
+        [INCREASE] Updated max_eval: -inf → 0
+        [MAX] Node #27 returns: 0
+      [RESULT] Move (2,2) evaluation: 0
+      [DECREASE] Updated min_eval: 1 → 0
+      [UPDATE] Updated β: 1 → 0
+      [PRUNE] PRUNING! β (0) ≤ α (0)
+         Skipping remaining moves: []
+      [MIN] Node #24 returns: 0
+    [RESULT] Move (1,0) evaluation: 0
+    [TRY] Trying move at (2,2) for X
+      [EXAMINE] Node #29 at depth 2:
+              | X | O |   |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        | O | X | X |
+      [MIN] MIN (O) player's turn
+      [WIN] Terminal state: X wins, value = +1
+    [RESULT] Move (2,2) evaluation: 1
+    [INCREASE] Updated max_eval: 0 → 1
+    [UPDATE] Updated α: 0 → 1
+    [PRUNE] PRUNING! β (1) ≤ α (1)
+       Skipping remaining moves: []
+    [MAX] Node #18 returns: 1
+  [RESULT] Move (2,0) evaluation: 1
+  [TRY] Trying move at (2,2) for O
+    [EXAMINE] Node #30 at depth 1:
+          | X | O |   |
+      |---+---+---|
+      |   | X | O |
+      |---+---+---|
+      |   | X | O |
+    [MAX] MAX (X) player's turn
+    [MOVES] Valid moves: ['(0,2)', '(1,0)', '(2,0)']
+    [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+    [TRY] Trying move at (0,2) for X
+      [EXAMINE] Node #31 at depth 2:
+              | X | O | X |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        |   | X | O |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(1,0)', '(2,0)']
+      [INIT] Starting with min_eval = ∞, α = -inf, β = 1
+      [TRY] Trying move at (1,0) for O
+        [EXAMINE] Node #32 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          | O | X | O |
+          |---+---+---|
+          |   | X | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(2,0)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (2,0) for X
+          [EXAMINE] Node #33 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | O | X | O |
+            |---+---+---|
+            | X | X | O |
+          [MIN] MIN (O) player's turn
+          [WIN] Terminal state: X wins, value = +1
+        [RESULT] Move (2,0) evaluation: 1
+        [INCREASE] Updated max_eval: -inf → 1
+        [UPDATE] Updated α: -inf → 1
+        [PRUNE] PRUNING! β (1) ≤ α (1)
+           Skipping remaining moves: []
+        [MAX] Node #32 returns: 1
+      [RESULT] Move (1,0) evaluation: 1
+      [DECREASE] Updated min_eval: inf → 1
+      [TRY] Trying move at (2,0) for O
+        [EXAMINE] Node #34 at depth 3:
+                  | X | O | X |
+          |---+---+---|
+          |   | X | O |
+          |---+---+---|
+          | O | X | O |
+        [MAX] MAX (X) player's turn
+        [MOVES] Valid moves: ['(1,0)']
+        [INIT] Starting with max_eval = -∞, α = -inf, β = 1
+        [TRY] Trying move at (1,0) for X
+          [EXAMINE] Node #35 at depth 4:
+                      | X | O | X |
+            |---+---+---|
+            | X | X | O |
+            |---+---+---|
+            | O | X | O |
+          [MIN] MIN (O) player's turn
+          [UPDATE] Terminal state: Draw, value = 0
+        [RESULT] Move (1,0) evaluation: 0
+        [INCREASE] Updated max_eval: -inf → 0
+        [UPDATE] Updated α: -inf → 0
+        [MAX] Node #34 returns: 0
+      [RESULT] Move (2,0) evaluation: 0
+      [DECREASE] Updated min_eval: 1 → 0
+      [UPDATE] Updated β: 1 → 0
+      [MIN] Node #31 returns: 0
+    [RESULT] Move (0,2) evaluation: 0
+    [INCREASE] Updated max_eval: -inf → 0
+    [UPDATE] Updated α: -inf → 0
+    [TRY] Trying move at (1,0) for X
+      [EXAMINE] Node #36 at depth 2:
+              | X | O |   |
+        |---+---+---|
+        | X | X | O |
+        |---+---+---|
+        |   | X | O |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(0,2)', '(2,0)']
+      [INIT] Starting with min_eval = ∞, α = 0, β = 1
+      [TRY] Trying move at (0,2) for O
+        [EXAMINE] Node #37 at depth 3:
+                  | X | O | O |
+          |---+---+---|
+          | X | X | O |
+          |---+---+---|
+          |   | X | O |
+        [MAX] MAX (X) player's turn
+        [WIN] Terminal state: O wins, value = -1
+      [RESULT] Move (0,2) evaluation: -1
+      [DECREASE] Updated min_eval: inf → -1
+      [UPDATE] Updated β: 1 → -1
+      [PRUNE] PRUNING! β (-1) ≤ α (0)
+         Skipping remaining moves: ['(2,0)']
+      [MIN] Node #36 returns: -1
+    [RESULT] Move (1,0) evaluation: -1
+    [TRY] Trying move at (2,0) for X
+      [EXAMINE] Node #38 at depth 2:
+              | X | O |   |
+        |---+---+---|
+        |   | X | O |
+        |---+---+---|
+        | X | X | O |
+      [MIN] MIN (O) player's turn
+      [MOVES] Valid moves: ['(0,2)', '(1,0)']
+      [INIT] Starting with min_eval = ∞, α = 0, β = 1
+      [TRY] Trying move at (0,2) for O
+        [EXAMINE] Node #39 at depth 3:
+                  | X | O | O |
+          |---+---+---|
+          |   | X | O |
+          |---+---+---|
+          | X | X | O |
+        [MAX] MAX (X) player's turn
+        [WIN] Terminal state: O wins, value = -1
+      [RESULT] Move (0,2) evaluation: -1
+      [DECREASE] Updated min_eval: inf → -1
+      [UPDATE] Updated β: 1 → -1
+      [PRUNE] PRUNING! β (-1) ≤ α (0)
+         Skipping remaining moves: ['(1,0)']
+      [MIN] Node #38 returns: -1
+    [RESULT] Move (2,0) evaluation: -1
+    [MAX] Node #30 returns: 0
+  [RESULT] Move (2,2) evaluation: 0
+  [DECREASE] Updated min_eval: 1 → 0
+  [UPDATE] Updated β: 1 → 0
+  [MIN] Node #1 returns: 0
+
+[EXAMINE] ROOT EVALUATION: Move (2,2)
+Board after move:
+  | X | O |   |
+  |---+---+---|
+  |   | X | O |
+  |---+---+---|
+  |   |   | X |
+[FINAL] Move (2,2) final value: 1
+  [EXAMINE] Node #1 at depth 0:
+      | X | O |   |
+    |---+---+---|
+    |   | X | O |
+    |---+---+---|
+    |   |   | X |
+  [MIN] MIN (O) player's turn
+  [WIN] Terminal state: X wins, value = +1
+
+[WIN] FINAL DECISION:
+Best move: (0,2) with value 1
+Total positions evaluated: 117
+
+🌳 DECISION TREE VISUALIZATION (Simplified)
+    Root
+     │
+  ┌── Move (0,2) ⭐
+  ├── Move (1,0)
+  ├── Move (2,0)
+  ├── Move (2,1)
+  └── Move (2,2)

@@ -1,6 +1,7 @@
 import time
 import psutil
 from copy import deepcopy
+import sys
 from collections import deque
 import heapq
 import os
@@ -169,10 +170,11 @@ class Mosaic:
             state, idx = stack.pop()
             row = idx // n
             col = idx % n
-            
+            # print(idx, state)
             if idx == total_cells:
                 reshape = lambda arr, n: [arr[i*n:(i+1)*n] for i in range(n)]
                 res = reshape(state, n)
+                # print(res)
                 if (self.is_solved(board, res)):
                     return res
             else:
@@ -183,7 +185,7 @@ class Mosaic:
                         step_count += 1
                         padded_state = new_state + [0] * (total_cells - len(new_state))
                         self.log_state(padded_state, step_count, "dfs", 
-                                     row=row, col=col, value="#")
+                                        row=row, col=col, value="#")
                     stack.append((new_state, idx + 1))
         return None
 
@@ -200,7 +202,7 @@ class Mosaic:
             state, idx = queue.popleft()
             row = idx // n
             col = idx % n
-            
+            # print(idx, state)
             if idx == total_cells:
                 reshape = lambda arr, n: [arr[i*n:(i+1)*n] for i in range(n)]
                 res = reshape(state, n)
@@ -250,10 +252,11 @@ class Mosaic:
         self.log_state(board, 0, "a_star", mode='w')
         
         while pq:
+            # print(pq)
             f, g, state, idx = heapq.heappop(pq)
             row = idx // n
             col = idx % n
-            
+            # print("Index:", idx, "State:", state, "f:", f, "g:", g)
             if idx == total_cells:
                 reshape = lambda arr, n: [arr[i*n:(i+1)*n] for i in range(n)]
                 res = reshape(state, n)
@@ -267,10 +270,12 @@ class Mosaic:
                         step_count += 1
                         padded_state = new_state + [0] * (total_cells - len(new_state))
                         self.log_state(padded_state, step_count, "a_star",
-                                     row=row, col=col, value="#")
+                                        row=row, col=col, value="#")
                     new_idx = idx + 1
                     new_g = g + 1
-                    new_f = new_g + self.h(board, new_state)
+                    h = self.h(board, new_state)
+                    # print(h)
+                    new_f = new_g + h
                     heapq.heappush(pq, (new_f, new_g, new_state, new_idx))
         return None
     
@@ -286,7 +291,15 @@ class Mosaic:
 # Example Usage
 # Save a text file "mosaic_input.txt" with the puzzle.
 if __name__ == '__main__':
-    mosaic = Mosaic("testcases/tc2.txt")
+    testcase = sys.argv[1] if len(sys.argv) > 1 else "tc1"
+    algorithm = sys.argv[2] if len(sys.argv) > 2 else "DFS"
+    mosaic = Mosaic(f"testcases/{testcase}.txt")
+    # mosaic = Mosaic("testcases/tc4.txt")
     # mosaic.solve_by_DFS()
-    mosaic.solve_by_BFS()
-    # mosaic.solve_by_A_star()
+    # mosaic.solve_by_BFS()
+    if algorithm == "DFS":
+        mosaic.solve_by_DFS()
+    elif algorithm == "BFS":
+        mosaic.solve_by_BFS()
+    elif algorithm == "A*":
+        mosaic.solve_by_A_star()

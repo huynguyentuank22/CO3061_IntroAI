@@ -1,0 +1,24 @@
+Best move for X: 4 (position 1,1)
+
+--- DECISION PROCESS EXPLANATION ---
+
+Starting search for best move
+Initial board state:
+  X O X
+  X   O
+  O X X
+Finding best move for player X
+Considering 1 possible moves: [4]
+
+Evaluating move 4 at position (1,1)
+Move 4 final evaluation: 1
+  Examining position at depth 0:
+      X O X
+    X X O
+    O X X
+  Minimizing player's turn.
+  Terminal state: X wins, returning value 1
+New best move: 4 with value 1
+
+Final decision: Move 4 with value 1
+Total positions evaluated: 1

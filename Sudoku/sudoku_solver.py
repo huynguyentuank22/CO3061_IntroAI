@@ -106,6 +106,7 @@ class Sudoku:
         
         while open_set:
             f_score, steps, current_board, remaining_cells = heapq.heappop(open_set)
+            # print (f_score, steps, current_board, remaining_cells)
             board_tuple = tuple(tuple(row) for row in current_board)
             
             if board_tuple in visited:
@@ -138,7 +139,7 @@ class Sudoku:
                 
             row, col = best_cell
             new_remaining = [cell for cell in remaining_cells if cell != best_cell]
-            
+            # print(len(new_remaining))
             # Try each valid number for the selected cell
             for num in best_numbers:
                 # Create new board state

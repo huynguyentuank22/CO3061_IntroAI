@@ -125,7 +125,24 @@ class MosaicUI:
                 f.write("\n")
                 if row % 3 == 2 and row < len(self.current_solution) - 1:
                     f.write("-" * (len(self.current_solution[0]) * 3 + 2) + "\n")
+    def load_steps_from_log(self, log_file_path):
+        with open(log_file_path, 'r') as file:
+            lines = file.readlines()
 
+        step = None
+        board = []
+        for line in lines:
+            line = line.strip()
+            if line.startswith("Initial board:") or line.startswith("Step"):
+                if step is not None:
+                    self.solution_steps.append(step)
+                step = {"description": line, "board": []}
+            elif line:
+                board_row = [int(cell) if cell.isdigit() else None for cell in line.split()]
+                step["board"].append(board_row)
+
+        if step is not None:
+            self.solution_steps.append(step)
     def solve_puzzle(self, algorithm):
         self.algorithm = algorithm
         self.solving = True
@@ -145,7 +162,11 @@ class MosaicUI:
             self.mosaic.solve_by_A_star()
         
         # Load solution steps from the solver's log file
-        self.solution_steps = []
+        if algorithm == "solve_a*":
+            temp = "a_star"
+        else:
+            temp = algorithm[6:]
+        self.solution_steps = self.load_steps_from_log("output/" + "output_" + temp + ".txt")
         
         if os.path.exists(filename):
             current_board = None

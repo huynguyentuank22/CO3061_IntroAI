@@ -1,0 +1,39 @@
+# ULTIMATE TIC-TAC-TOE DECISION TREE
+Current player: X
+Active board: (0, 0)
+
+Current macro board state:
+   - | - | - 
+  ---------
+   - | - | - 
+  ---------
+   - | - | - 
+
+Root (X to move)
+|
++-- Move X to b(0,0)->c(0,0) [1] *
+|   +-- Move O to b(0,1)->c(0,0) [1]
+|   |-- Move O to b(0,1)->c(0,1) [1]
+|   |-- Move O to b(0,1)->c(0,2) [1]
+|   \-- ...
+|-- Move X to b(0,0)->c(0,1) [0]  
+|   +-- Move O to b(0,1)->c(0,0) [0]
+|   |-- Move O to b(0,1)->c(0,1) [0]
+|   |-- Move O to b(0,1)->c(0,2) [0]
+|   \-- ...
+|-- Move X to b(0,0)->c(0,2) [0]  
+|   +-- Move O to b(0,2)->c(0,0) [0]
+|   |-- Move O to b(0,2)->c(0,1) [0]
+|   |-- Move O to b(0,2)->c(0,2) [0]
+|   \-- ...
+|-- Move X to b(0,0)->c(1,0) [0]  
+|   +-- Move O to b(1,0)->c(0,0) [0]
+|   |-- Move O to b(1,0)->c(0,1) [0]
+|   |-- Move O to b(1,0)->c(0,2) [0]
+|   \-- ...
+|-- Move X to b(0,0)->c(1,2) [0]  
+|   +-- Move O to b(1,2)->c(0,0) [0]
+|   |-- Move O to b(1,2)->c(0,1) [0]
+|   |-- Move O to b(1,2)->c(0,2) [0]
+|   \-- ...
+\-- ...

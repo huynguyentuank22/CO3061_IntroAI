@@ -1,0 +1,112 @@
+=== ULTIMATE BOARD STATE ===
+Current player: X
+Active board: (0, 0)
+
+ .  .  . | .  .  . | .  .  . 
+ .  X  . | .  .  . | .  .  . 
+ .  .  X | .  .  . | .  .  . 
+-----------------------------
+ .  .  . | O  .  . | .  .  . 
+ .  .  . | .  .  . | .  .  . 
+ .  .  . | .  .  . | .  .  . 
+-----------------------------
+ .  .  . | .  .  . | O  .  . 
+ .  .  . | .  .  . | .  .  . 
+ .  .  . | .  .  . | .  .  . 
+
+Small boards won:
+ -  -  - 
+ -  -  - 
+ -  -  - 
+===========================
+
+# MONTE CARLO TREE SEARCH DECISION PROCESS
+Current player: X
+Evaluating 7 possible moves with 100 simulations per move
+
+Testing move: b(0,0)->c(0,0)
+  → Running 100 random simulations from this position
+  → Results: 43 wins, 23 draws, 34 losses
+  → Win rate: 43.0%, Draw rate: 23.0%, Loss rate: 34.0%
+  → Simulation time: 0.061 seconds
+
+Testing move: b(0,0)->c(0,1)
+  → Running 100 random simulations from this position
+  → Results: 35 wins, 23 draws, 42 losses
+  → Win rate: 35.0%, Draw rate: 23.0%, Loss rate: 42.0%
+  → Simulation time: 0.060 seconds
+
+Testing move: b(0,0)->c(0,2)
+  → Running 100 random simulations from this position
+  → Results: 32 wins, 27 draws, 41 losses
+  → Win rate: 32.0%, Draw rate: 27.0%, Loss rate: 41.0%
+  → Simulation time: 0.079 seconds
+
+Testing move: b(0,0)->c(1,0)
+  → Running 100 random simulations from this position
+  → Results: 43 wins, 20 draws, 37 losses
+  → Win rate: 43.0%, Draw rate: 20.0%, Loss rate: 37.0%
+  → Simulation time: 0.062 seconds
+
+Testing move: b(0,0)->c(1,2)
+  → Running 100 random simulations from this position
+  → Results: 39 wins, 24 draws, 37 losses
+  → Win rate: 39.0%, Draw rate: 24.0%, Loss rate: 37.0%
+  → Simulation time: 0.063 seconds
+
+Testing move: b(0,0)->c(2,0)
+  → Running 100 random simulations from this position
+  → Results: 36 wins, 20 draws, 44 losses
+  → Win rate: 36.0%, Draw rate: 20.0%, Loss rate: 44.0%
+  → Simulation time: 0.047 seconds
+
+Testing move: b(0,0)->c(2,1)
+  → Running 100 random simulations from this position
+  → Results: 35 wins, 24 draws, 41 losses
+  → Win rate: 35.0%, Draw rate: 24.0%, Loss rate: 41.0%
+  → Simulation time: 0.062 seconds
+
+FINAL DECISION: b(0,0)->c(0,0) with win rate 43.0%
+Total simulation time: 0.434 seconds
+
+# MOVE WIN RATE COMPARISON
+Move               | Win %  | Draw % | Loss % | Simulations
+--------------------|--------|--------|--------|------------
+b(0,0)->c(0,0)     |  43.0% |  23.0% |  34.0% | 100 ←
+b(0,0)->c(1,0)     |  43.0% |  20.0% |  37.0% | 100
+b(0,0)->c(1,2)     |  39.0% |  24.0% |  37.0% | 100
+b(0,0)->c(2,0)     |  36.0% |  20.0% |  44.0% | 100
+b(0,0)->c(0,1)     |  35.0% |  23.0% |  42.0% | 100
+b(0,0)->c(2,1)     |  35.0% |  24.0% |  41.0% | 100
+b(0,0)->c(0,2)     |  32.0% |  27.0% |  41.0% | 100
+# MCTS DECISION TREE VISUALIZATION
+Root (Current Position)
+│
+├── b(0,0)->c(1,2) [Win: 50.0%]
+│   ├── Random playout → X wins
+│   ├── Random playout → Draw
+│   └── Random playout → O wins
+├── b(0,0)->c(2,1) [Win: 50.0%]
+│   ├── Random playout → X wins
+│   ├── Random playout → Draw
+│   └── Random playout → O wins
+├── b(0,0)->c(2,0) [Win: 46.0%]
+│   ├── Random playout → X wins
+│   ├── Random playout → Draw
+│   └── Random playout → O wins
+├── b(0,0)->c(0,2) [Win: 44.0%]
+│   └── ...
+├── b(0,0)->c(0,1) [Win: 41.0%]
+│   └── ...
+├── b(0,0)->c(0,0) [Win: 38.0%] ★
+│   └── ...
+└── b(0,0)->c(1,0) [Win: 31.0%]
+    └── ...
+
+# EXPLANATION OF MCTS DECISION MAKING
+Monte Carlo Tree Search chose move b(0,0)->c(0,0) because:
+1. It had the highest win rate in random playouts
+2. MCTS evaluates moves by simulating random games to their conclusion
+3. This statistical approach helps in positions where traditional evaluation is difficult
+4. It balances short-term tactics with long-term position quality
+5. The win percentage represents the probability of winning from that position
