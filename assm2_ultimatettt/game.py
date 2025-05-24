@@ -26,7 +26,10 @@ class Game:
             'Medium': lambda mark: MinimaxPlayer(mark, depth=3),
             'Hard': lambda mark: MinimaxPlayer(mark, depth=5),
             'MCTS': lambda mark: MCTSPlayer(mark, simulation_time=1.0),
-            'Model': lambda mark: ModelPlayer(mark, model_path='model.pt', temperature=0.5)
+            'Model': lambda mark: ModelPlayer(mark, model_path='model.pt', temperature=0.5, use_mcts=False),
+            'Model+MCTS': lambda mark: ModelPlayer(mark, model_path='model.pt', temperature=0.1, 
+                                                  use_mcts=True, simulation_time=1.0, num_simulations=800, 
+                                                  c_puct=1.5, top_k_moves=3)
         }
         
         self.running = False
@@ -419,3 +422,82 @@ class Game:
             print(f"Neural network training data saved to {self.training_logger.log_file}")
             
         return completed_battles
+    
+    def run_benchmark_test(self, num_games=20):
+        """Run a benchmark comparing standard Model vs Model+MCTS"""
+        print("\nRunning benchmark: Model vs Model+MCTS")
+        print("====================================")
+        
+        # Create players
+        model_player = ModelPlayer('X', model_path='model.pt', temperature=0.1, use_mcts=False)
+        model_mcts_player = ModelPlayer('O', model_path='model.pt', temperature=0.1, 
+                                     use_mcts=True, simulation_time=1.0, num_simulations=800)
+        
+        results = {'Model': 0, 'Model+MCTS': 0, 'Draw': 0}
+        move_times = {'Model': [], 'Model+MCTS': []}
+        
+        # Run games
+        for i in range(num_games):
+            print(f"Game {i+1}/{num_games}...")
+            
+            # Reset board
+            board = UltimateBoard()
+            turn_count = 0
+            
+            # Alternate who goes first
+            if i % 2 == 0:
+                players = {'X': model_player, 'O': model_mcts_player}
+                player_types = {'X': 'Model', 'O': 'Model+MCTS'}
+            else:
+                players = {'X': model_mcts_player, 'O': model_player}
+                player_types = {'X': 'Model+MCTS', 'O': 'Model'}
+                
+                # Update player marks for correct evaluation
+                model_player.mark = 'O'
+                model_mcts_player.mark = 'X'
+            
+            # Play the game
+            while board.winner is None and not board.is_draw:
+                current_mark = board.current_player
+                current_player = players[current_mark]
+                current_type = player_types[current_mark]
+                
+                # Time the move decision
+                start_time = time.time()
+                move = current_player.get_move(board)
+                end_time = time.time()
+                
+                # Record move time
+                move_times[current_type].append(end_time - start_time)
+                
+                # Make the move
+                if move:
+                    board_row, board_col, row, col = move
+                    board.make_move(board_row, board_col, row, col)
+                    turn_count += 1
+            
+            # Record result
+            if board.winner:
+                winner_type = player_types[board.winner]
+                results[winner_type] += 1
+                print(f"  Winner: {winner_type} in {turn_count} moves")
+            else:
+                results['Draw'] += 1
+                print(f"  Draw after {turn_count} moves")
+            
+            # Reset player marks for next game
+            model_player.mark = 'X' 
+            model_mcts_player.mark = 'O'
+                
+        # Display results
+        print("\nBenchmark Results:")
+        print(f"Total games: {num_games}")
+        print(f"Model wins: {results['Model']} ({results['Model']/num_games*100:.1f}%)")
+        print(f"Model+MCTS wins: {results['Model+MCTS']} ({results['Model+MCTS']/num_games*100:.1f}%)")
+        print(f"Draws: {results['Draw']} ({results['Draw']/num_games*100:.1f}%)")
+        
+        print("\nAverage move time:")
+        print(f"Model: {sum(move_times['Model'])/len(move_times['Model']):.3f} seconds")
+        print(f"Model+MCTS: {sum(move_times['Model+MCTS'])/len(move_times['Model+MCTS']):.3f} seconds")
+        
+        return results

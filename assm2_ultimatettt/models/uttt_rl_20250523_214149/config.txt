@@ -1,0 +1,16 @@
+model: model.pt
+episodes: 1000
+batch_size: 64
+train_interval: 10
+save_interval: 100
+temperature: 1.0
+learning_rate: 0.0001
+no_mcts: False
+curriculum: False
+curriculum_stages: 3
+use_per: False
+output_dir: models
+experiment_name: 
+plot_results: False
+evaluate: False
+eval_games: 50

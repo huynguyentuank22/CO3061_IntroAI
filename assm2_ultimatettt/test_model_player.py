@@ -1,5 +1,5 @@
 from player import RandomPlayer, MinimaxPlayer, MCTSPlayer, ModelPlayer
-from ultimate_board import UltimateTicTacToeBoard  # Assuming you have this class
+from ultimate_board import UltimateBoard  # Assuming you have this class
 import time
 import random
 
@@ -61,7 +61,7 @@ def play_tournament(players_x, players_o, num_games=100, verbose_last=False):
                 verbose = verbose_last and game == num_games - 1
                 
                 # Create a new board for each game
-                board = UltimateTicTacToeBoard()
+                board = UltimateBoard()
                 
                 # Play the game
                 winner = play_game(board, player_x, player_o, verbose)
