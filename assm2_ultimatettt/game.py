@@ -13,6 +13,11 @@ class Game:
         self.board = UltimateBoard()
         self.ui = GameUI()
         self.clock = pygame.time.Clock()
+        self.network_mode = False
+        self.peer = None
+        self.network_username = None
+        self.is_my_turn = False
+        self.my_network_pause_count = 0
         
         # Default players
         self.players = {
@@ -46,6 +51,7 @@ class Game:
         self.start_time = None
         self.move_count = 0
         self.paused = False
+        self.network_pause_deadline = None
         
     def start_game(self, player_o_type='Random'):
         """Start the game with human player vs selected AI opponent"""
@@ -64,6 +70,26 @@ class Game:
         self.move_count = 0
         
         self.agent_mode = False
+        self.running = True
+        self.main_loop()
+    
+    def start_game_network(self, peer, username, i_start_first: bool):
+        """Start network human vs human game using PeerNetwork"""
+        self.board = UltimateBoard()
+        self.players['X'] = HumanPlayer('X')  # UI only; moves go via network
+        self.players['O'] = HumanPlayer('O')
+        self.player_x_type = 'Human'
+        self.player_o_type = 'Human'
+        self.start_time = time.time()
+        self.move_count = 0
+        self.agent_mode = False
+        self.network_mode = True
+        self.peer = peer
+        self.network_username = username
+        self.is_my_turn = i_start_first
+        # Hide restart in pause menu for network mode
+        self.ui.show_restart_in_pause = False
+        self.ui.pause_countdown_seconds = None
         self.running = True
         self.main_loop()
     
@@ -112,6 +138,13 @@ class Game:
 
             # If paused, handle pause menu and skip game updates
             if self.paused:
+                # Update countdown if network mode
+                if self.network_mode and self.network_pause_deadline:
+                    remaining = max(0, int(self.network_pause_deadline - time.time()))
+                    self.ui.pause_countdown_seconds = remaining
+                    # Attempt auto-resume if peer thinks it's time
+                    if self.peer:
+                        self.peer.try_resume()
                 self._handle_pause_events()
                 self.clock.tick(30)
                 continue
@@ -120,8 +153,56 @@ class Game:
             current_mark = self.board.current_player
             current_player = self.players[current_mark]
             
-            # Special handling for agent vs agent mode
-            if self.agent_mode:
+            # Special handling for network human vs human
+            if self.network_mode:
+                # Poll peer status for incoming events
+                if self.peer:
+                    # If opponent requested pause, show pause overlay
+                    if self.peer.pause_active and not self.paused:
+                        self.paused = True
+                        self.ui.is_showing_pause_menu = True
+                        self.network_pause_deadline = self.peer.pause_deadline_ts
+                    status = self.peer.get_game_status()
+                    if isinstance(status, dict) and status.get('type') == 'MOVE':
+                        # Apply opponent move
+                        self.board.make_move(status['main_row'], status['main_col'], status['sub_row'], status['sub_col'])
+                        self.move_count += 1
+                        self.is_my_turn = True
+                    # Pause updates are handled via callback updating flags/UI
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        if self.peer:
+                            self.peer.send_quit()
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        if self.ui.is_pause_button_clicked(event.pos):
+                            # Request network pause (max twice)
+                            if self.peer and self.peer.request_pause(30):
+                                self.paused = True
+                                self.ui.is_showing_pause_menu = True
+                                self.network_pause_deadline = self.peer.pause_deadline_ts
+                            continue
+                        pos = pygame.mouse.get_pos()
+                        if not self.is_my_turn:
+                            continue
+                        cell = self.ui.get_cell_from_click(pos)
+                        if cell is None:
+                            continue
+                        board_row, board_col, row, col = cell
+                        # Try move legality via board
+                        try:
+                            self.board.make_move(board_row, board_col, row, col)
+                            self.move_count += 1
+                            self.is_my_turn = False
+                            if self.peer:
+                                self.peer.send_move(board_row, board_col, row, col)
+                        except Exception:
+                            pass
+                # No AI thinking caption in network mode
+
+            # Special handling for agent vs agent mode (local)
+            elif self.agent_mode:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
@@ -195,12 +276,21 @@ class Game:
         """Handle human player input"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                if self.network_mode and self.peer:
+                    self.peer.send_quit()
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.ui.is_pause_button_clicked(event.pos):
-                    self.paused = True
-                    self.ui.is_showing_pause_menu = True
+                    if self.network_mode:
+                        # Request network pause
+                        if self.peer and self.peer.request_pause(30):
+                            self.paused = True
+                            self.ui.is_showing_pause_menu = True
+                            self.network_pause_deadline = self.peer.pause_deadline_ts
+                    else:
+                        self.paused = True
+                        self.ui.is_showing_pause_menu = True
                     return
             
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click
@@ -217,9 +307,12 @@ class Game:
             
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:  # Restart game
-                    self.restart_game()
+                    if not self.network_mode:
+                        self.restart_game()
                     return
                 if event.key == pygame.K_q:  # Quit
+                    if self.network_mode and self.peer:
+                        self.peer.send_quit()
                     pygame.quit()
                     sys.exit()
     
@@ -260,24 +353,38 @@ class Game:
         """Handle events while the pause menu is active"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                if self.network_mode and self.peer:
+                    self.peer.send_quit()
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_ESCAPE, pygame.K_p):
                     # Continue
-                    self.paused = False
-                    self.ui.is_showing_pause_menu = False
+                    if self.network_mode and self.peer:
+                        self.peer.send_pause_ack()
+                        # Resume might wait for both; try immediate resume if possible
+                        self.peer.try_resume()
+                    else:
+                        self.paused = False
+                        self.ui.is_showing_pause_menu = False
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 choice = self.ui.pause_menu_button_from_pos(event.pos)
                 if choice == 'continue':
-                    self.paused = False
-                    self.ui.is_showing_pause_menu = False
+                    if self.network_mode and self.peer:
+                        self.peer.send_pause_ack()
+                        self.peer.try_resume()
+                    else:
+                        self.paused = False
+                        self.ui.is_showing_pause_menu = False
                 elif choice == 'restart':
-                    self.restart_game()
-                    self.paused = False
-                    self.ui.is_showing_pause_menu = False
+                    if not self.network_mode:
+                        self.restart_game()
+                        self.paused = False
+                        self.ui.is_showing_pause_menu = False
                 elif choice == 'quit':
                     # Return to main menu
+                    if self.network_mode and self.peer:
+                        self.peer.send_quit()
                     self.paused = False
                     self.ui.is_showing_pause_menu = False
                     self.running = False

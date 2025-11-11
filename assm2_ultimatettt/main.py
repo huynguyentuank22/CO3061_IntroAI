@@ -1,6 +1,7 @@
 import pygame
 import sys
 from game import Game
+from peer import PeerNetwork
 
 def main():
     """Main function to start the game"""
@@ -30,14 +31,21 @@ def main():
     # Create game instance
     game = Game()
     
-    # Main menu options - add Generate Training Data
-    main_options = ['Human vs AI', 'Agent vs Agent', 'Batch Simulation', 'Generate Training Data']
+    # Main menu options - add Network Human vs Human and Generate Training Data
+    main_options = ['Human vs AI', 'Agent vs Agent', 'Human vs Human (Network)', 'Batch Simulation', 'Generate Training Data']
     
     # Menu state
-    menu_state = 'main'  # 'main', 'human_vs_ai', 'agent_vs_agent', 'batch_simulation', 'training_data'
+    menu_state = 'main'  # 'main', 'human_vs_ai', 'agent_vs_agent', 'network_name', 'network_lobby', 'batch_simulation', 'training_data'
     first_agent = None  # For agent vs agent mode
     batch_size = 100    # Default batch simulation size
     training_size = 50 # Default training data generation size
+
+    # Network UI state
+    username_input = ""
+    username_active = False
+    peer = None
+    is_broadcasting = False
+    network_buttons = []  # Accept buttons
     
     # Menu loop
     running = True
@@ -55,7 +63,7 @@ def main():
             
             # Draw buttons for main options
             button_height = 60
-            button_width = 300
+            button_width = 400
             button_margin = 20
             button_y = 300
             
@@ -155,6 +163,101 @@ def main():
                 buttons.append((button_rect, option))
                 button_y += button_height + button_margin
                 
+        elif menu_state == 'network_name':
+            subtitle = button_font.render("Enter your name:", True, BLACK)
+            screen.blit(subtitle, (width // 2 - subtitle.get_width() // 2, 220))
+
+            # Input box
+            input_rect = pygame.Rect(width // 2 - 200, 280, 400, 50)
+            mouse_pos = pygame.mouse.get_pos()
+            pygame.draw.rect(screen, LIGHT_BLUE if input_rect.collidepoint(mouse_pos) or username_active else GRAY, input_rect)
+            pygame.draw.rect(screen, BLACK, input_rect, 2)
+
+            name_surface = button_font.render(username_input or "Player", True, BLACK)
+            screen.blit(name_surface, (input_rect.x + 10, input_rect.y + 10))
+
+            # Continue and Back buttons
+            cont_rect = pygame.Rect(width // 2 - 150, 360, 300, 60)
+            back_rect = pygame.Rect(width // 2 - 150, 430, 300, 60)
+            for rect, label in [(cont_rect, "Continue"), (back_rect, "Back")]:
+                if rect.collidepoint(mouse_pos):
+                    pygame.draw.rect(screen, LIGHT_BLUE, rect)
+                else:
+                    pygame.draw.rect(screen, GRAY, rect)
+                pygame.draw.rect(screen, BLACK, rect, 2)
+                text = button_font.render(label, True, BLACK)
+                screen.blit(text, (rect.centerx - text.get_width() // 2, rect.centery - text.get_height() // 2))
+
+            buttons = [(cont_rect, "network_continue"), (back_rect, "back")]
+
+        elif menu_state == 'network_lobby':
+            subtitle = button_font.render(f"Network Lobby - {username_input}", True, BLACK)
+            screen.blit(subtitle, (width // 2 - subtitle.get_width() // 2, 180))
+
+            # Ensure peer network created
+            if peer is None:
+                try:
+                    peer = PeerNetwork(username_input)
+                    peer.initialize_udp_socket()
+                    peer.initialize_tcp_socket()
+                except Exception:
+                    peer = None
+
+            # Search/Stop button
+            button_height = 50
+            search_rect = pygame.Rect(width // 2 - 320, 230, 260, button_height)
+            listen_rect = pygame.Rect(width // 2 + 60, 230, 260, button_height)
+            mouse_pos = pygame.mouse.get_pos()
+            for rect, label in [(search_rect, "Stop Searching" if is_broadcasting else "Search for Opponent"),
+                                (listen_rect, "Back to Menu")]:
+                if rect.collidepoint(mouse_pos):
+                    pygame.draw.rect(screen, LIGHT_BLUE, rect)
+                else:
+                    pygame.draw.rect(screen, GRAY, rect)
+                pygame.draw.rect(screen, BLACK, rect, 2)
+                text = small_font.render(label, True, BLACK)
+                screen.blit(text, (rect.centerx - text.get_width() // 2, rect.centery - text.get_height() // 2))
+
+            # Pending requests list
+            list_title = small_font.render("Incoming Requests:", True, BLACK)
+            screen.blit(list_title, (width // 2 - 150, 310))
+            network_buttons = []
+            y = 340
+            requests = peer.get_pending_requests() if peer else []
+            for req in requests[:6]:
+                row_rect = pygame.Rect(width // 2 - 300, y, 600, 40)
+                pygame.draw.rect(screen, (245, 245, 245), row_rect)
+                pygame.draw.rect(screen, BLACK, row_rect, 1)
+                label = small_font.render(f"{req['username']}  (signal {req['strength']})", True, BLACK)
+                screen.blit(label, (row_rect.x + 10, row_rect.y + 8))
+                accept_rect = pygame.Rect(row_rect.right - 110, row_rect.y + 5, 100, 30)
+                if accept_rect.collidepoint(mouse_pos):
+                    pygame.draw.rect(screen, LIGHT_BLUE, accept_rect)
+                else:
+                    pygame.draw.rect(screen, GRAY, accept_rect)
+                pygame.draw.rect(screen, BLACK, accept_rect, 1)
+                accept_text = small_font.render("Accept", True, BLACK)
+                screen.blit(accept_text, (accept_rect.centerx - accept_text.get_width() // 2,
+                                          accept_rect.centery - accept_text.get_height() // 2))
+                network_buttons.append((accept_rect, ('accept', req['username'])))
+                y += 50
+
+            # Check for game start message
+            if peer:
+                status = peer.get_game_status()
+                if isinstance(status, dict) and status.get('type') == 'GAME_START':
+                    first_player = status.get('first_player')
+                    i_start_first = (first_player == username_input)
+                    pygame.display.set_caption("Ultimate Tic Tac Toe - Network Game")
+                    game.start_game_network(peer, username_input, i_start_first)
+                    pygame.display.set_caption("Ultimate Tic Tac Toe - Menu")
+                    # After game returns
+                    is_broadcasting = False
+                    menu_state = 'main'
+                    peer = None
+
+            buttons = [(search_rect, 'toggle_search'), (listen_rect, 'back')]
+
         elif menu_state == 'batch_simulation':
             subtitle = button_font.render("Batch Simulation Settings", True, BLACK)
             screen.blit(subtitle, (width // 2 - subtitle.get_width() // 2, 200))
@@ -300,6 +403,11 @@ def main():
                 sys.exit()
             
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if menu_state == 'network_name':
+                    # Activate input box
+                    input_rect = pygame.Rect(width // 2 - 200, 280, 400, 50)
+                    username_active = input_rect.collidepoint(event.pos)
+                # Button handling below
                 for button, option in buttons:
                     if button.collidepoint(event.pos):
                         if menu_state == 'main':
@@ -308,11 +416,46 @@ def main():
                             elif option == 'Agent vs Agent':
                                 menu_state = 'agent_vs_agent'
                                 first_agent = None
+                            elif option == 'Human vs Human (Network)':
+                                menu_state = 'network_name'
                             elif option == 'Batch Simulation':
                                 menu_state = 'batch_simulation'
                             elif option == 'Generate Training Data':
                                 menu_state = 'training_data'
                                 
+                        elif menu_state == 'network_name':
+                            if option == 'network_continue':
+                                if not username_input.strip():
+                                    username_input = "Player"
+                                # Go to lobby
+                                menu_state = 'network_lobby'
+                            elif option == 'back':
+                                menu_state = 'main'
+                                username_input = ""
+                                username_active = False
+
+                        elif menu_state == 'network_lobby':
+                            if option == 'toggle_search':
+                                if peer:
+                                    if is_broadcasting:
+                                        peer.stop_broadcasting()
+                                        is_broadcasting = False
+                                    else:
+                                        peer.broadcast_connect_request()
+                                        is_broadcasting = True
+                            elif option == 'back':
+                                if peer:
+                                    peer.stop_broadcasting()
+                                peer = None
+                                is_broadcasting = False
+                                menu_state = 'main'
+                            # Accept buttons
+                            for arect, payload in network_buttons:
+                                if arect.collidepoint(event.pos):
+                                    kind, uname = payload
+                                    if kind == 'accept' and peer:
+                                        peer.accept_connection(uname)
+
                         elif menu_state == 'human_vs_ai':
                             # Start game with human vs selected AI
                             game.start_game(option)
@@ -371,6 +514,18 @@ def main():
                             elif option == "back":
                                 menu_state = 'main'
                             
+            if event.type == pygame.KEYDOWN:
+                if menu_state == 'network_name' and username_active:
+                    if event.key == pygame.K_RETURN:
+                        username_active = False
+                    elif event.key == pygame.K_BACKSPACE:
+                        username_input = username_input[:-1]
+                    else:
+                        # Basic text input
+                        ch = event.unicode
+                        if ch.isprintable() and len(username_input) < 20:
+                            username_input += ch
+
         pygame.time.Clock().tick(30)
 
 if __name__ == "__main__":

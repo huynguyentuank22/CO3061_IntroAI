@@ -36,9 +36,13 @@ class GameUI:
         self.is_showing_pause_menu = False
         self.pause_menu_buttons = {
             'continue': pygame.Rect(self.width // 2 - 150, self.height // 2 - 100, 300, 60),
-            'restart': pygame.Rect(self.width // 2 - 150, self.height // 2 - 20, 300, 60),
             'quit': pygame.Rect(self.width // 2 - 150, self.height // 2 + 60, 300, 60)
         }
+        # Restart is optional (hidden in network mode)
+        self.pause_button_restart_rect = pygame.Rect(self.width // 2 - 150, self.height // 2 - 20, 300, 60)
+        self.show_restart_in_pause = True
+        # Optional countdown seconds display in pause menu (network mode)
+        self.pause_countdown_seconds = None
         
     def draw_board(self, board):
         """Draw the entire Ultimate Tic Tac Toe board"""
@@ -148,11 +152,28 @@ class GameUI:
             self.screen.blit(text, (rect.centerx - text.get_width() // 2, 
                                     rect.centery - text.get_height() // 2))
 
+        # Optional Restart in the middle (for non-network games)
+        if self.show_restart_in_pause:
+            color = self.LIGHT_BLUE if self.pause_button_restart_rect.collidepoint(mouse_pos) else self.GRAY
+            pygame.draw.rect(self.screen, color, self.pause_button_restart_rect, border_radius=6)
+            pygame.draw.rect(self.screen, self.BLACK, self.pause_button_restart_rect, 2, border_radius=6)
+            text = self.small_font.render("Restart Game", True, self.BLACK)
+            self.screen.blit(text, (self.pause_button_restart_rect.centerx - text.get_width() // 2, 
+                                    self.pause_button_restart_rect.centery - text.get_height() // 2))
+
+        # Optional countdown
+        if self.pause_countdown_seconds is not None:
+            countdown_text = self.small_font.render(f"Resuming in: {int(self.pause_countdown_seconds)}s", True, self.BLACK)
+            self.screen.blit(countdown_text, (panel_rect.centerx - countdown_text.get_width() // 2,
+                                              panel_rect.top + 70))
+
     def pause_menu_button_from_pos(self, pos):
         """Return which pause menu button is clicked, or None"""
         for key, rect in self.pause_menu_buttons.items():
             if rect.collidepoint(pos):
                 return key
+        if self.show_restart_in_pause and self.pause_button_restart_rect.collidepoint(pos):
+            return 'restart'
         return None
     
     def _draw_small_board(self, small_board, x0, y0):
