@@ -45,6 +45,7 @@ class Game:
         self.training_logger = TrainingDataLogger()
         self.start_time = None
         self.move_count = 0
+        self.paused = False
         
     def start_game(self, player_o_type='Random'):
         """Start the game with human player vs selected AI opponent"""
@@ -108,6 +109,12 @@ class Game:
         while self.running:
             # Draw the board
             self.ui.draw_board(self.board)
+
+            # If paused, handle pause menu and skip game updates
+            if self.paused:
+                self._handle_pause_events()
+                self.clock.tick(30)
+                continue
             
             # Handle current player's move
             current_mark = self.board.current_player
@@ -119,6 +126,11 @@ class Game:
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         sys.exit()
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        if self.ui.is_pause_button_clicked(event.pos):
+                            self.paused = True
+                            self.ui.is_showing_pause_menu = True
+                            continue
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_r:  # Restart game
                             self.restart_game()
@@ -126,11 +138,6 @@ class Game:
                         if event.key == pygame.K_q:  # Quit
                             pygame.quit()
                             sys.exit()
-                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                        pos = pygame.mouse.get_pos()
-                        if self.ui.is_restart_button_clicked(pos):
-                            self.restart_game()
-                            continue
                 
                 # Show which agent is thinking
                 pygame.display.set_caption(f"Ultimate Tic Tac Toe - {current_mark} ({type(current_player).__name__}) thinking...")
@@ -190,17 +197,20 @@ class Game:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.ui.is_pause_button_clicked(event.pos):
+                    self.paused = True
+                    self.ui.is_showing_pause_menu = True
+                    return
             
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click
                 pos = pygame.mouse.get_pos()
-                
-                # Check if restart button was clicked
-                if self.ui.is_restart_button_clicked(pos):
-                    self.restart_game()
-                    return
-                
+
                 # Handle game board click
-                board_row, board_col, row, col = self.ui.get_cell_from_click(pos)
+                cell = self.ui.get_cell_from_click(pos)
+                if cell is None:
+                    return
+                board_row, board_col, row, col = cell
                 
                 # Try to make the move
                 self.board.make_move(board_row, board_col, row, col)
@@ -221,7 +231,11 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if self.ui.is_pause_button_clicked(event.pos):
+                        # ignore pause during game-over; no-op
+                        pass
+
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_r:  # Restart
                         self.restart_game()
@@ -229,12 +243,6 @@ class Game:
                     if event.key == pygame.K_q:  # Quit
                         pygame.quit()
                         sys.exit()
-                
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    pos = pygame.mouse.get_pos()
-                    if self.ui.is_restart_button_clicked(pos):
-                        self.restart_game()
-                        waiting = False
             
             # Display game over message
             font = pygame.font.SysFont('Arial', 30)
@@ -243,13 +251,36 @@ class Game:
             else:
                 text = font.render("Game over! It's a draw! Press R to restart or Q to quit", True, (0, 0, 255))
                 
-            text_rect = text.get_rect(center=(self.ui.width // 2, self.ui.height - 50))
+            text_rect = text.get_rect(center=(self.ui.width // 2, self.ui.height - 30))
             self.ui.screen.blit(text, text_rect)
             
-            # Make sure restart button is visible
-            self.ui.draw_restart_button()
-            
             pygame.display.flip()
+
+    def _handle_pause_events(self):
+        """Handle events while the pause menu is active"""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_ESCAPE, pygame.K_p):
+                    # Continue
+                    self.paused = False
+                    self.ui.is_showing_pause_menu = False
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                choice = self.ui.pause_menu_button_from_pos(event.pos)
+                if choice == 'continue':
+                    self.paused = False
+                    self.ui.is_showing_pause_menu = False
+                elif choice == 'restart':
+                    self.restart_game()
+                    self.paused = False
+                    self.ui.is_showing_pause_menu = False
+                elif choice == 'quit':
+                    # Return to main menu
+                    self.paused = False
+                    self.ui.is_showing_pause_menu = False
+                    self.running = False
     
     def run_batch_simulation(self, num_battles=100, display_progress=True, collect_training_data=False):
         """Run a batch of agent vs agent battles with random agent types"""
