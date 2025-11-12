@@ -452,14 +452,17 @@ class PeerNetwork:
 
     def handle_peer_messages(self):
         """Handle incoming messages from connected peer."""
+        print(f"Message handler thread started for {self.username}")
         while self.is_connected and self.peer_connection:
             try:
                 data = self.peer_connection.recv(4096)
                 if not data:
+                    print(f"No data received, disconnecting")
                     self.handle_disconnect("Opponent disconnected")
                     break
                 try:
                     message = pickle.loads(data)
+                    print(f"Received message type: {message.get('type')}")
                 except (pickle.UnpicklingError, EOFError) as e:
                     print(f"Failed to unpickle message: {e}")
                     continue
@@ -505,18 +508,20 @@ class PeerNetwork:
                     # If we were broadcasting (TCP listener accepted connection), send GAME_START
                     # The acceptor connects to us, so we send GAME_START
                     if self.opponent_username:
-                        time.sleep(0.1)  # Brief delay to ensure connection is stable
+                        time.sleep(0.2)  # Brief delay to ensure connection is stable
                         first_player = min(self.username, self.opponent_username)
-                        self.send_message({
+                        game_start_msg = {
                             'type': 'GAME_START',
                             'first_player': first_player
-                        })
+                        }
+                        self.send_message(game_start_msg)
                         print(f"Sent GAME_START, first player: {first_player}")
                         # Store in game_status so main loop can detect it
                         self.game_status = {
                             'type': 'GAME_START',
                             'first_player': first_player
                         }
+                        print(f"Stored GAME_START in game_status: {self.game_status}")
                 elif message.get('type') == 'DISCONNECT':
                     self.handle_disconnect(message.get('message', 'Opponent disconnected'))
                     break
@@ -595,7 +600,12 @@ class PeerNetwork:
     def get_game_status(self):
         """Get current game status."""
         status = self.game_status
-        self.game_status = None  # Clear after reading
+        # Don't clear GAME_START immediately - keep it until game actually starts
+        # Other status types can be cleared
+        if status and isinstance(status, dict) and status.get('type') == 'GAME_START':
+            # Keep GAME_START until it's consumed by starting the game
+            return status
+        self.game_status = None  # Clear other status types after reading
         return status
 
     # High-level helpers for Pygame integration

@@ -274,6 +274,8 @@ def main():
                     first_player = status.get('first_player')
                     i_start_first = (first_player == username_input)
                     print(f"Starting network game, first player: {first_player}, I start first: {i_start_first}")
+                    # Clear the game status so we don't start multiple times
+                    peer.game_status = None
                     pygame.display.set_caption("Ultimate Tic Tac Toe - Network Game")
                     game.start_game_network(peer, username_input, i_start_first)
                     pygame.display.set_caption("Ultimate Tic Tac Toe - Menu")
@@ -289,10 +291,12 @@ def main():
                             except:
                                 pass
                     peer = None
-                # Also check if we just connected and need to wait for GAME_START
-                elif peer.is_connected and not hasattr(peer, '_game_start_checked'):
-                    # Give it a moment for GAME_START to arrive
-                    pass
+                # Debug: show connection status
+                elif peer.is_connected:
+                    # Show waiting message if connected but no GAME_START yet
+                    if not hasattr(peer, '_waiting_shown'):
+                        print(f"Connected to {peer.opponent_username}, waiting for GAME_START...")
+                        peer._waiting_shown = True
 
             buttons = [(search_rect, 'toggle_search'), (listen_rect, 'back')]
 
@@ -445,7 +449,22 @@ def main():
                     # Activate input box
                     input_rect = pygame.Rect(width // 2 - 200, 280, 400, 50)
                     username_active = input_rect.collidepoint(event.pos)
-                # Button handling below
+                
+                # Handle Accept button clicks FIRST (before main button loop)
+                if menu_state == 'network_lobby':
+                    for arect, payload in network_buttons:
+                        if arect.collidepoint(event.pos):
+                            kind, uname = payload
+                            if kind == 'accept' and peer and not peer.is_connected:
+                                print(f"Accepting connection from {uname}")
+                                if peer.accept_connection(uname):
+                                    print(f"Successfully accepted connection from {uname}")
+                                else:
+                                    print(f"Failed to accept connection from {uname}")
+                                # Break to avoid checking other buttons
+                                break
+                
+                # Main button handling
                 for button, option in buttons:
                     if button.collidepoint(event.pos):
                         if menu_state == 'main':
@@ -487,20 +506,6 @@ def main():
                                 peer = None
                                 is_broadcasting = False
                                 menu_state = 'main'
-                            # Accept buttons - handle outside main button loop
-                            pass  # Accept buttons handled below
-                        
-                        # Handle Accept button clicks (outside main button loop)
-                        if menu_state == 'network_lobby':
-                            for arect, payload in network_buttons:
-                                if arect.collidepoint(event.pos):
-                                    kind, uname = payload
-                                    if kind == 'accept' and peer and not peer.is_connected:
-                                        print(f"Accepting connection from {uname}")
-                                        if peer.accept_connection(uname):
-                                            print(f"Successfully accepted connection from {uname}")
-                                        else:
-                                            print(f"Failed to accept connection from {uname}")
 
                         elif menu_state == 'human_vs_ai':
                             # Start game with human vs selected AI
