@@ -1,5 +1,6 @@
 import pygame
 import sys
+import time
 from game import Game
 from peer import PeerNetwork
 
@@ -194,14 +195,27 @@ def main():
             subtitle = button_font.render(f"Network Lobby - {username_input}", True, BLACK)
             screen.blit(subtitle, (width // 2 - subtitle.get_width() // 2, 180))
 
-            # Ensure peer network created
+            # Ensure peer network created and UDP listener started
             if peer is None:
                 try:
                     peer = PeerNetwork(username_input)
-                    peer.initialize_udp_socket()
+                    if not peer.initialize_udp_socket():
+                        error_text = small_font.render("Failed to initialize network. Check firewall settings.", True, (255, 0, 0))
+                        screen.blit(error_text, (width // 2 - error_text.get_width() // 2, 750))
+                    else:
+                        # Start UDP listener thread
+                        if not peer.start_udp_listener():
+                            error_text = small_font.render("Failed to start network listener.", True, (255, 0, 0))
+                            screen.blit(error_text, (width // 2 - error_text.get_width() // 2, 750))
+                    # Initialize TCP socket for accepting connections
                     peer.initialize_tcp_socket()
-                except Exception:
+                except Exception as e:
+                    print(f"Error creating peer network: {e}")
+                    import traceback
+                    traceback.print_exc()
                     peer = None
+                    error_text = small_font.render(f"Network error: {str(e)}", True, (255, 0, 0))
+                    screen.blit(error_text, (width // 2 - error_text.get_width() // 2, 750))
 
             # Search/Stop button
             button_height = 50
@@ -217,6 +231,16 @@ def main():
                 pygame.draw.rect(screen, BLACK, rect, 2)
                 text = small_font.render(label, True, BLACK)
                 screen.blit(text, (rect.centerx - text.get_width() // 2, rect.centery - text.get_height() // 2))
+
+            # Status text
+            if peer:
+                if is_broadcasting:
+                    status_text = small_font.render("Status: Searching for opponents...", True, GREEN)
+                elif peer.is_connected:
+                    status_text = small_font.render("Status: Connected! Starting game...", True, GREEN)
+                else:
+                    status_text = small_font.render("Status: Listening for requests...", True, BLACK)
+                screen.blit(status_text, (width // 2 - status_text.get_width() // 2, 290))
 
             # Pending requests list
             list_title = small_font.render("Incoming Requests:", True, BLACK)
@@ -242,8 +266,8 @@ def main():
                 network_buttons.append((accept_rect, ('accept', req['username'])))
                 y += 50
 
-            # Check for game start message
-            if peer:
+            # Check for game start when connected
+            if peer and peer.is_connected:
                 status = peer.get_game_status()
                 if isinstance(status, dict) and status.get('type') == 'GAME_START':
                     first_player = status.get('first_player')
@@ -254,6 +278,14 @@ def main():
                     # After game returns
                     is_broadcasting = False
                     menu_state = 'main'
+                    # Clean up peer
+                    if peer:
+                        peer.stop_broadcasting()
+                        if peer.peer_connection:
+                            try:
+                                peer.peer_connection.close()
+                            except:
+                                pass
                     peer = None
 
             buttons = [(search_rect, 'toggle_search'), (listen_rect, 'back')]

@@ -57,15 +57,25 @@ class PeerNetwork:
     def initialize_udp_socket(self):
         """Initialize UDP socket for broadcasting and listening."""
         try:
+            # Close existing socket if any
+            if self.udp_socket:
+                try:
+                    self.udp_socket.close()
+                except:
+                    pass
             self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             self.udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Set socket to non-blocking for better control
+            self.udp_socket.settimeout(0.1)  # 100ms timeout for recv
             # Bind to all interfaces for better broadcast reception
             self.udp_socket.bind(('', self.UDP_PORT))
-            print(f"Listening for connection requests on UDP port {self.UDP_PORT}...")
+            print(f"UDP socket initialized on port {self.UDP_PORT}")
             return True
         except Exception as e:
             print(f"UDP socket initialization failed: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def initialize_tcp_socket(self):
@@ -113,13 +123,22 @@ class PeerNetwork:
                 print(f"TCP accept error: {e}")
                 break
 
-    def start(self):
-        """Start the peer network."""
-        self.initialize_udp_socket()
-
-        # Start UDP listener thread
+    def start_udp_listener(self):
+        """Start the UDP listener thread (non-blocking)."""
+        if not self.udp_socket:
+            if not self.initialize_udp_socket():
+                return False
+        # Start UDP listener thread if not already running
+        # Check if thread is already running by checking if socket is bound
         udp_listener_thread = threading.Thread(target=self.listen_for_udp, daemon=True)
         udp_listener_thread.start()
+        print(f"UDP listener thread started for {self.username}")
+        return True
+
+    def start(self):
+        """Start the peer network (legacy console mode)."""
+        self.initialize_udp_socket()
+        self.start_udp_listener()
 
         while True:
             if not self.is_connected:
@@ -168,12 +187,19 @@ class PeerNetwork:
                         'sequence': broadcast_count
                     })
                     
-                    # Send to broadcast address
-                    self.udp_socket.sendto(request_msg, ('<broadcast>', self.UDP_PORT))
+                    # Send to multiple broadcast addresses for better compatibility
+                    # Try subnet broadcast first (most reliable on LAN)
+                    try:
+                        subnet_broadcast = '.'.join(self.local_ip.split('.')[:-1] + ['255'])
+                        self.udp_socket.sendto(request_msg, (subnet_broadcast, self.UDP_PORT))
+                    except:
+                        pass
                     
-                    # Also try sending to subnet broadcast
-                    subnet_broadcast = '.'.join(self.local_ip.split('.')[:-1] + ['255'])
-                    self.udp_socket.sendto(request_msg, (subnet_broadcast, self.UDP_PORT))
+                    # Also try global broadcast
+                    try:
+                        self.udp_socket.sendto(request_msg, ('255.255.255.255', self.UDP_PORT))
+                    except:
+                        pass
                     
                     broadcast_count += 1
                     time.sleep(1)  # Broadcast more frequently
@@ -194,53 +220,60 @@ class PeerNetwork:
 
     def listen_for_udp(self):
         """Listen for incoming UDP messages with improved error handling and validation."""
-        print(f"Starting UDP listener for {self.username}...")
+        print(f"UDP listener thread started for {self.username}")
         while True:
             try:
+                if not self.udp_socket:
+                    time.sleep(1)
+                    continue
                 data, addr = self.udp_socket.recvfrom(4096)
-                print(f"Received UDP data from {addr}")
                 if not data:
                     continue
 
                 try:
                     message = pickle.loads(data)
-                    print(f"Decoded message: {message}")
-                except pickle.UnpicklingError:
-                    print(f"Invalid message format from {addr}")
-                    continue
+                except (pickle.UnpicklingError, EOFError) as e:
+                    continue  # Silently skip invalid messages
 
                 if not isinstance(message, dict) or 'type' not in message:
-                    print(f"Malformed message from {addr}")
                     continue
 
                 if (message['type'] == 'CONNECT_REQUEST' and 
-                    addr[0] != self.local_ip and  # Ignore self-broadcasts
+                    message.get('username') != self.username and  # Ignore self-broadcasts
                     not self.is_connected):  # Only process if not already connected
                     
                     # Validate required fields
                     required_fields = ['username', 'local_ip', 'tcp_port']
                     if not all(field in message for field in required_fields):
-                        print(f"Missing required fields in message from {addr}")
                         continue
 
+                    # Use the IP from the message or the sender address
+                    sender_ip = addr[0]
                     request = {
                         'username': message['username'],
-                        'ip': addr[0],  # Use actual sender IP
+                        'ip': sender_ip,  # Use actual sender IP
                         'tcp_port': message['tcp_port'],
                         'timestamp': time.time(),
-                        'strength': 1  # New field to track request persistence
+                        'strength': 1
                     }
 
                     self.update_pending_requests(request)
-                    print(f"\nNew connection request from {request['username']} at {request['ip']}")
-                    self.display_pending_requests()
+                    print(f"Received connection request from {request['username']} at {request['ip']}:{request['tcp_port']}")
 
+            except socket.timeout:
+                # Expected with non-blocking socket, continue
+                continue
             except socket.error as e:
-                print(f"UDP socket error: {e}")
-                time.sleep(1)  # Prevent tight loop on error
+                # Socket might be closed, check if we should continue
+                if self.udp_socket:
+                    time.sleep(0.1)
+                else:
+                    break
             except Exception as e:
                 print(f"Unexpected error in UDP listener: {e}")
-                time.sleep(1)
+                import traceback
+                traceback.print_exc()
+                time.sleep(0.1)
 
     def update_pending_requests(self, new_request: Dict):
         """Update pending requests with thread safety and improved handling."""
@@ -312,61 +345,87 @@ class PeerNetwork:
 
     def accept_connection(self, opponent_username):
         """Accept a connection request from a specific user."""
-        for request in self.pending_requests:
-            if request['username'] == opponent_username:
-                try:
-                    # Stop broadcasting if we're searching
-                    self.stop_broadcasting()
-                    
-                    # Initialize TCP connection
-                    if not self.tcp_socket:
-                        if not self.initialize_tcp_socket():
-                            return False
-                    
-                    # Connect to peer
-                    peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    print(f"Attempting to connect to {request['ip']}:{request['tcp_port']}")
-                    # Set a timeout for the connection attempt
-                    peer_socket.settimeout(5)
-                    peer_socket.connect((request['ip'], request['tcp_port']))
-                    # Reset to blocking mode after connection
-                    peer_socket.settimeout(None)
-                    self.peer_connection = peer_socket
-                    self.is_connected = True
-                    self.opponent_username = opponent_username
-                    print(f"Connected to peer {opponent_username} at {request['ip']}:{request['tcp_port']}")
-
-                    # Start message handling thread
-                    threading.Thread(target=self.handle_peer_messages,
-                                  daemon=True).start()
-                    
-                    # Clean up requests
-                    self.pending_requests = []
-                    
-                    # Send connection confirmation
-                    self.send_message({
-                        'type': 'CONNECTION_ACCEPTED',
-                        'username': self.username
-                    })
-                    # Decide first player deterministically by username lexical order
-                    first_player = min(self.username, opponent_username)
-                    self.send_message({
-                        'type': 'GAME_START',
-                        'first_player': first_player
-                    })
-                    
-                    self.accepted_connection = True
-                    
-                    return True
-                except Exception as e:
-                    print(f"Connection error: {e}")
-                    # Clean up failed connection
-                    try:
-                        peer_socket.close()
-                    except:
-                        pass
+        with self.request_lock:
+            request = None
+            for req in self.pending_requests:
+                if req['username'] == opponent_username:
+                    request = req
+                    break
+        
+        if not request:
+            print(f"No pending request found for {opponent_username}")
+            return False
+            
+        try:
+            # Stop broadcasting if we're searching
+            self.stop_broadcasting()
+            
+            # Initialize TCP socket if needed (for accepting connections)
+            if not self.tcp_socket:
+                if not self.initialize_tcp_socket():
                     return False
-        return False
+            
+            # Connect to peer
+            peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print(f"Attempting to connect to {request['ip']}:{request['tcp_port']}")
+            # Set a timeout for the connection attempt
+            peer_socket.settimeout(5)
+            try:
+                peer_socket.connect((request['ip'], request['tcp_port']))
+            except socket.timeout:
+                print(f"Connection timeout to {request['ip']}:{request['tcp_port']}")
+                peer_socket.close()
+                return False
+            except Exception as e:
+                print(f"Connection failed: {e}")
+                peer_socket.close()
+                return False
+            
+            # Reset to blocking mode after connection
+            peer_socket.settimeout(None)
+            self.peer_connection = peer_socket
+            self.is_connected = True
+            self.opponent_username = opponent_username
+            print(f"Connected to peer {opponent_username} at {request['ip']}:{request['tcp_port']}")
+
+            # Start message handling thread
+            threading.Thread(target=self.handle_peer_messages,
+                          daemon=True).start()
+            
+            # Clean up requests
+            with self.request_lock:
+                self.pending_requests = []
+            
+            # Send connection confirmation
+            self.send_message({
+                'type': 'CONNECTION_ACCEPTED',
+                'username': self.username
+            })
+            
+            # Wait a moment for CONNECTION_ACCEPTED to be received by the other side
+            time.sleep(0.1)
+            
+            # Decide first player deterministically by username lexical order
+            first_player = min(self.username, opponent_username)
+            self.send_message({
+                'type': 'GAME_START',
+                'first_player': first_player
+            })
+            
+            self.accepted_connection = True
+            
+            return True
+        except Exception as e:
+            print(f"Connection error: {e}")
+            import traceback
+            traceback.print_exc()
+            # Clean up failed connection
+            try:
+                if 'peer_socket' in locals():
+                    peer_socket.close()
+            except:
+                pass
+            return False
 
     def reject_connection(self, username):
         """Reject a connection request from a specific user."""
@@ -377,13 +436,17 @@ class PeerNetwork:
 
     def handle_peer_messages(self):
         """Handle incoming messages from connected peer."""
-        while self.is_connected:
+        while self.is_connected and self.peer_connection:
             try:
-                data = self.peer_connection.recv(1024)
+                data = self.peer_connection.recv(4096)
                 if not data:
                     self.handle_disconnect("Opponent disconnected")
                     break
-                message = pickle.loads(data)
+                try:
+                    message = pickle.loads(data)
+                except (pickle.UnpicklingError, EOFError) as e:
+                    print(f"Failed to unpickle message: {e}")
+                    continue
                 
                 if message.get('type') == 'MOVE':
                     print(f"Received move: {message}")
@@ -421,6 +484,15 @@ class PeerNetwork:
                 elif message.get('type') == 'CONNECTION_ACCEPTED':
                     # store opponent username
                     self.opponent_username = message.get('username')
+                    # If we were broadcasting and they accepted, send GAME_START
+                    if not self.accepted_connection and self.opponent_username:
+                        time.sleep(0.1)  # Brief delay
+                        first_player = min(self.username, self.opponent_username)
+                        self.send_message({
+                            'type': 'GAME_START',
+                            'first_player': first_player
+                        })
+                        print(f"Sent GAME_START, first player: {first_player}")
                 elif message.get('type') == 'DISCONNECT':
                     self.handle_disconnect(message.get('message', 'Opponent disconnected'))
                     break
