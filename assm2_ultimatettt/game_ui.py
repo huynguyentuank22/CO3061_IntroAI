@@ -158,35 +158,63 @@ class GameUI:
         self.screen.blit(title, (panel_rect.centerx - title.get_width() // 2, panel_rect.top + 20))
 
         mouse_pos = pygame.mouse.get_pos()
-        for key, rect in self.pause_menu_buttons.items():
+
+        # Xác định y của các vị trí nút cố định (3 vị trí)
+        start_y = panel_rect.top + 80
+        spacing = 60
+        button_positions = [
+            panel_rect.top + 80,          # vị trí 1
+            panel_rect.top + 80 + spacing, # vị trí 2
+            panel_rect.top + 80 + 2*spacing  # vị trí 3
+        ]
+
+        # Vẽ các nút dựa vào thứ tự
+        for idx, key in enumerate(["continue", "quit"]):
+            # Nếu có nút restart riêng, thứ tự y bình thường
+            if self.show_restart_in_pause:
+                if key == "continue":
+                    y_pos = button_positions[0]
+                elif key == "quit":
+                    y_pos = button_positions[2]
+            else:
+                # Nếu không có restart, giữ y cố định: vị trí 1 trống
+                if key == "continue":
+                    y_pos = button_positions[1]
+                elif key == "quit":
+                    y_pos = button_positions[2]
+
+            rect = self.pause_menu_buttons[key]
+            rect.top = y_pos
             color = self.LIGHT_BLUE if rect.collidepoint(mouse_pos) else self.GRAY
             pygame.draw.rect(self.screen, color, rect, border_radius=6)
             pygame.draw.rect(self.screen, self.BLACK, rect, 2, border_radius=6)
-            label = {"continue": "Continue", "restart": "Restart Game", "quit": "Quit Game"}[key]
+            label = {"continue": "Continue", "quit": "Quit Game"}[key]
             text = self.small_font.render(label, True, self.BLACK)
-            self.screen.blit(text, (rect.centerx - text.get_width() // 2, 
+            self.screen.blit(text, (rect.centerx - text.get_width() // 2,
                                     rect.centery - text.get_height() // 2))
 
-        # Optional Restart in the middle (for non-network games)
+        # Vẽ nút Restart nếu có
         if self.show_restart_in_pause:
-            color = self.LIGHT_BLUE if self.pause_button_restart_rect.collidepoint(mouse_pos) else self.GRAY
-            pygame.draw.rect(self.screen, color, self.pause_button_restart_rect, border_radius=6)
-            pygame.draw.rect(self.screen, self.BLACK, self.pause_button_restart_rect, 2, border_radius=6)
+            rect = self.pause_button_restart_rect
+            rect.top = button_positions[1]  # vị trí giữa
+            color = self.LIGHT_BLUE if rect.collidepoint(mouse_pos) else self.GRAY
+            pygame.draw.rect(self.screen, color, rect, border_radius=6)
+            pygame.draw.rect(self.screen, self.BLACK, rect, 2, border_radius=6)
             text = self.small_font.render("Restart Game", True, self.BLACK)
-            self.screen.blit(text, (self.pause_button_restart_rect.centerx - text.get_width() // 2, 
-                                    self.pause_button_restart_rect.centery - text.get_height() // 2))
+            self.screen.blit(text, (rect.centerx - text.get_width() // 2,
+                                    rect.centery - text.get_height() // 2))
 
-        # Optional countdown
+        # Countdown
         if self.pause_countdown_seconds is not None:
             countdown_text = self.small_font.render(f"Resuming in: {int(self.pause_countdown_seconds)}s", True, self.BLACK)
             self.screen.blit(countdown_text, (panel_rect.centerx - countdown_text.get_width() // 2,
-                                              panel_rect.top + 70))
+                                            panel_rect.top + 70))
         
-        # Show opponent ready status if available
+        # Opponent ready
         if self.opponent_ready_text:
             ready_text = self.small_font.render(self.opponent_ready_text, True, self.GREEN)
             self.screen.blit(ready_text, (panel_rect.centerx - ready_text.get_width() // 2,
-                                          panel_rect.top + 100))
+                                        panel_rect.top + 100))
 
     def pause_menu_button_from_pos(self, pos):
         """Return which pause menu button is clicked, or None"""
