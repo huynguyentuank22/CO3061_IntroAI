@@ -43,8 +43,17 @@ class GameUI:
         self.show_restart_in_pause = True
         # Optional countdown seconds display in pause menu (network mode)
         self.pause_countdown_seconds = None
+        # Indicator for opponent ready status
+        self.opponent_ready_text = None
+        # Rematch popup
+        self.show_rematch_popup = False
+        self.rematch_opponent_name = None
+        self.rematch_popup_buttons = {
+            'yes': pygame.Rect(self.width // 2 - 150, self.height // 2 + 40, 120, 50),
+            'no': pygame.Rect(self.width // 2 + 30, self.height // 2 + 40, 120, 50)
+        }
         
-    def draw_board(self, board):
+    def draw_board(self, board, skip_flip=False):
         """Draw the entire Ultimate Tic Tac Toe board"""
         self.screen.fill(self.WHITE)
         
@@ -110,7 +119,13 @@ class GameUI:
         if self.is_showing_pause_menu:
             self.draw_pause_menu()
         
-        pygame.display.flip()
+        # Draw rematch popup if active (only if flag is True and we have opponent name)
+        if self.show_rematch_popup and self.rematch_opponent_name:
+            self.draw_rematch_popup()
+        
+        # Only flip if not skipped (allows caller to control when to flip)
+        if not skip_flip:
+            pygame.display.flip()
     
     def draw_pause_button(self):
         """Draw the pause button in the top UI bar"""
@@ -143,37 +158,100 @@ class GameUI:
         self.screen.blit(title, (panel_rect.centerx - title.get_width() // 2, panel_rect.top + 20))
 
         mouse_pos = pygame.mouse.get_pos()
-        for key, rect in self.pause_menu_buttons.items():
-            color = self.LIGHT_BLUE if rect.collidepoint(mouse_pos) else self.GRAY
-            pygame.draw.rect(self.screen, color, rect, border_radius=6)
-            pygame.draw.rect(self.screen, self.BLACK, rect, 2, border_radius=6)
-            label = {"continue": "Continue", "restart": "Restart Game", "quit": "Quit Game"}[key]
-            text = self.small_font.render(label, True, self.BLACK)
-            self.screen.blit(text, (rect.centerx - text.get_width() // 2, 
-                                    rect.centery - text.get_height() // 2))
-
-        # Optional Restart in the middle (for non-network games)
+        button_width = 300
+        button_height = 60
+        button_spacing = 20  # Space between buttons
+        
+        # Calculate button positions dynamically based on whether restart is shown
         if self.show_restart_in_pause:
-            color = self.LIGHT_BLUE if self.pause_button_restart_rect.collidepoint(mouse_pos) else self.GRAY
-            pygame.draw.rect(self.screen, color, self.pause_button_restart_rect, border_radius=6)
-            pygame.draw.rect(self.screen, self.BLACK, self.pause_button_restart_rect, 2, border_radius=6)
-            text = self.small_font.render("Restart Game", True, self.BLACK)
-            self.screen.blit(text, (self.pause_button_restart_rect.centerx - text.get_width() // 2, 
-                                    self.pause_button_restart_rect.centery - text.get_height() // 2))
+            # All three buttons: Continue, Restart, Quit
+            # Center the middle button (Restart) at screen center
+            center_y = self.height // 2
+            continue_y = center_y - button_height - button_spacing
+            restart_y = center_y
+            quit_y = center_y + button_height + button_spacing
+        else:
+            # Only two buttons: Continue and Quit
+            # Center them with proper spacing, leaving space where Restart would be
+            center_y = self.height // 2
+            continue_y = center_y - (button_height + button_spacing) // 2
+            restart_y = None  # Not shown
+            quit_y = center_y + (button_height + button_spacing) // 2
+        
+        # Draw Continue button
+        continue_rect = pygame.Rect(self.width // 2 - button_width // 2, continue_y, button_width, button_height)
+        color = self.LIGHT_BLUE if continue_rect.collidepoint(mouse_pos) else self.GRAY
+        pygame.draw.rect(self.screen, color, continue_rect, border_radius=6)
+        pygame.draw.rect(self.screen, self.BLACK, continue_rect, 2, border_radius=6)
+        continue_text = self.small_font.render("Continue", True, self.BLACK)
+        self.screen.blit(continue_text, (continue_rect.centerx - continue_text.get_width() // 2, 
+                                         continue_rect.centery - continue_text.get_height() // 2))
+        
+        # Draw Restart button (if shown)
+        if self.show_restart_in_pause:
+            restart_rect = pygame.Rect(self.width // 2 - button_width // 2, restart_y, button_width, button_height)
+            color = self.LIGHT_BLUE if restart_rect.collidepoint(mouse_pos) else self.GRAY
+            pygame.draw.rect(self.screen, color, restart_rect, border_radius=6)
+            pygame.draw.rect(self.screen, self.BLACK, restart_rect, 2, border_radius=6)
+            restart_text = self.small_font.render("Restart Game", True, self.BLACK)
+            self.screen.blit(restart_text, (restart_rect.centerx - restart_text.get_width() // 2, 
+                                           restart_rect.centery - restart_text.get_height() // 2))
+        
+        # Draw Quit button
+        quit_rect = pygame.Rect(self.width // 2 - button_width // 2, quit_y, button_width, button_height)
+        color = self.LIGHT_BLUE if quit_rect.collidepoint(mouse_pos) else self.GRAY
+        pygame.draw.rect(self.screen, color, quit_rect, border_radius=6)
+        pygame.draw.rect(self.screen, self.BLACK, quit_rect, 2, border_radius=6)
+        quit_text = self.small_font.render("Quit Game", True, self.BLACK)
+        self.screen.blit(quit_text, (quit_rect.centerx - quit_text.get_width() // 2, 
+                                     quit_rect.centery - quit_text.get_height() // 2))
 
         # Optional countdown
         if self.pause_countdown_seconds is not None:
             countdown_text = self.small_font.render(f"Resuming in: {int(self.pause_countdown_seconds)}s", True, self.BLACK)
             self.screen.blit(countdown_text, (panel_rect.centerx - countdown_text.get_width() // 2,
                                               panel_rect.top + 70))
+        
+        # Show opponent ready status if available
+        if self.opponent_ready_text:
+            ready_text = self.small_font.render(self.opponent_ready_text, True, self.GREEN)
+            self.screen.blit(ready_text, (panel_rect.centerx - ready_text.get_width() // 2,
+                                          panel_rect.top + 90))
 
     def pause_menu_button_from_pos(self, pos):
         """Return which pause menu button is clicked, or None"""
-        for key, rect in self.pause_menu_buttons.items():
-            if rect.collidepoint(pos):
-                return key
-        if self.show_restart_in_pause and self.pause_button_restart_rect.collidepoint(pos):
-            return 'restart'
+        button_width = 300
+        button_height = 60
+        button_spacing = 20
+        
+        # Calculate button positions dynamically (same logic as draw_pause_menu)
+        if self.show_restart_in_pause:
+            center_y = self.height // 2
+            continue_y = center_y - button_height - button_spacing
+            restart_y = center_y
+            quit_y = center_y + button_height + button_spacing
+        else:
+            center_y = self.height // 2
+            continue_y = center_y - (button_height + button_spacing) // 2
+            restart_y = None
+            quit_y = center_y + (button_height + button_spacing) // 2
+        
+        # Check Continue button
+        continue_rect = pygame.Rect(self.width // 2 - button_width // 2, continue_y, button_width, button_height)
+        if continue_rect.collidepoint(pos):
+            return 'continue'
+        
+        # Check Restart button (if shown)
+        if self.show_restart_in_pause:
+            restart_rect = pygame.Rect(self.width // 2 - button_width // 2, restart_y, button_width, button_height)
+            if restart_rect.collidepoint(pos):
+                return 'restart'
+        
+        # Check Quit button
+        quit_rect = pygame.Rect(self.width // 2 - button_width // 2, quit_y, button_width, button_height)
+        if quit_rect.collidepoint(pos):
+            return 'quit'
+        
         return None
     
     def _draw_small_board(self, small_board, x0, y0):
@@ -249,3 +327,46 @@ class GameUI:
         row = y_offset // self.cell_size
         
         return board_row, board_col, row, col
+    
+    def draw_rematch_popup(self):
+        """Draw rematch request popup"""
+        # Semi-transparent overlay
+        overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 150))
+        self.screen.blit(overlay, (0, 0))
+        
+        # Popup panel
+        panel_rect = pygame.Rect(self.width // 2 - 250, self.height // 2 - 100, 500, 200)
+        pygame.draw.rect(self.screen, (250, 250, 250), panel_rect, border_radius=8)
+        pygame.draw.rect(self.screen, self.BLACK, panel_rect, 2, border_radius=8)
+        
+        # Title
+        title = self.font.render("Rematch Request", True, self.BLACK)
+        self.screen.blit(title, (panel_rect.centerx - title.get_width() // 2, panel_rect.top + 20))
+        
+        # Message
+        if self.rematch_opponent_name:
+            message_text = f"{self.rematch_opponent_name} wants to play again."
+            message = self.small_font.render(message_text, True, self.BLACK)
+            self.screen.blit(message, (panel_rect.centerx - message.get_width() // 2, panel_rect.top + 60))
+        
+        question = self.small_font.render("Accept?", True, self.BLACK)
+        self.screen.blit(question, (panel_rect.centerx - question.get_width() // 2, panel_rect.top + 90))
+        
+        # Buttons
+        mouse_pos = pygame.mouse.get_pos()
+        for key, rect in self.rematch_popup_buttons.items():
+            color = self.LIGHT_BLUE if rect.collidepoint(mouse_pos) else self.GRAY
+            pygame.draw.rect(self.screen, color, rect, border_radius=6)
+            pygame.draw.rect(self.screen, self.BLACK, rect, 2, border_radius=6)
+            label = "Yes" if key == 'yes' else "No"
+            text = self.small_font.render(label, True, self.BLACK)
+            self.screen.blit(text, (rect.centerx - text.get_width() // 2, 
+                                   rect.centery - text.get_height() // 2))
+    
+    def rematch_popup_button_from_pos(self, pos):
+        """Return which rematch popup button is clicked, or None"""
+        for key, rect in self.rematch_popup_buttons.items():
+            if rect.collidepoint(pos):
+                return key
+        return None

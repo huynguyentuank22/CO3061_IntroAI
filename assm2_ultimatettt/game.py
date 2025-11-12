@@ -52,6 +52,11 @@ class Game:
         self.move_count = 0
         self.paused = False
         self.network_pause_deadline = None
+        self.disconnected = False
+        self.disconnect_reason = None
+        # Rematch state
+        self.rematch_requested = False
+        self.showing_rematch_popup = False
         
     def start_game(self, player_o_type='Random'):
         """Start the game with human player vs selected AI opponent"""
@@ -90,7 +95,28 @@ class Game:
         # Hide restart in pause menu for network mode
         self.ui.show_restart_in_pause = False
         self.ui.pause_countdown_seconds = None
+        self.disconnected = False
+        self.disconnect_reason = None
+        self.rematch_requested = False
+        self.showing_rematch_popup = False
         self.running = True
+        
+        # Reset all UI rematch state to ensure clean start
+        self.ui.show_rematch_popup = False
+        self.ui.rematch_opponent_name = None
+        
+        # Set up disconnect callback
+        def on_disconnect(reason):
+            print(f"[DISCONNECT] Disconnect detected: {reason}")
+            self.disconnected = True
+            self.disconnect_reason = reason
+            self.running = False
+        
+        if self.peer:
+            self.peer.on_disconnect = on_disconnect
+            # Reset rematch state
+            self.peer.reset_rematch_state()
+        
         self.main_loop()
     
     def start_game_agents(self, player_x_type, player_o_type):
@@ -129,6 +155,38 @@ class Game:
         # Reset game statistics
         self.start_time = time.time()
         self.move_count = 0
+        
+        # Reset all UI rematch state to ensure clean start
+        self.ui.show_rematch_popup = False
+        self.ui.rematch_opponent_name = None
+        self.rematch_requested = False
+        self.showing_rematch_popup = False
+    
+    def _restart_network_game(self):
+        """Restart network game after rematch acceptance"""
+        print(f"[REMATCH] Restarting network game")
+        # Reset board
+        self.board = UltimateBoard()
+        
+        # Reset game statistics
+        self.start_time = time.time()
+        self.move_count = 0
+        
+        # Reset rematch state - ensure all UI elements are cleared
+        self.rematch_requested = False
+        self.showing_rematch_popup = False
+        self.ui.show_rematch_popup = False
+        self.ui.rematch_opponent_name = None
+        if self.peer:
+            self.peer.reset_rematch_state()
+        
+        # Alternate who goes first (opposite of current)
+        self.is_my_turn = not self.is_my_turn
+        
+        # Force a redraw to clear any lingering popups
+        self.ui.draw_board(self.board)
+        
+        # Continue main loop (game will resume)
     
     def main_loop(self):
         """Main game loop"""
@@ -142,9 +200,35 @@ class Game:
                 if self.network_mode and self.network_pause_deadline:
                     remaining = max(0, int(self.network_pause_deadline - time.time()))
                     self.ui.pause_countdown_seconds = remaining
-                    # Attempt auto-resume if peer thinks it's time
+                    # Continuously check if timer expired or both players are ready
                     if self.peer:
-                        self.peer.try_resume()
+                        # Update opponent ready indicator
+                        if self.peer.opponent_ack:
+                            self.ui.opponent_ready_text = "Opponent is ready to continue"
+                        else:
+                            self.ui.opponent_ready_text = None
+                        
+                        # Check if resume was triggered (either by both ready or timer)
+                        # This handles the case where we trigger the resume
+                        resume_triggered = self.peer.try_resume()
+                        if resume_triggered:
+                            # Resume was successful (we triggered it), unpause the game
+                            print(f"[PAUSE] Resume triggered by this player")
+                            self.paused = False
+                            self.ui.is_showing_pause_menu = False
+                            self.network_pause_deadline = None
+                            self.ui.pause_countdown_seconds = None
+                            self.ui.opponent_ready_text = None
+                        # Also check if opponent sent RESUME message (pause_active becomes False)
+                        # This handles the case where opponent triggered the resume
+                        elif not self.peer.pause_active:
+                            # Opponent sent RESUME, unpause the game
+                            print(f"[PAUSE] Resume received from opponent")
+                            self.paused = False
+                            self.ui.is_showing_pause_menu = False
+                            self.network_pause_deadline = None
+                            self.ui.pause_countdown_seconds = None
+                            self.ui.opponent_ready_text = None
                 self._handle_pause_events()
                 self.clock.tick(30)
                 continue
@@ -155,6 +239,19 @@ class Game:
             
             # Special handling for network human vs human
             if self.network_mode:
+                # Check for disconnection first
+                if self.disconnected:
+                    # Show disconnect message briefly before returning
+                    self._show_disconnect_message()
+                    return
+                
+                # Check if peer connection is lost
+                if self.peer and not self.peer.is_connected:
+                    self.disconnected = True
+                    self.disconnect_reason = self.peer.game_status if isinstance(self.peer.game_status, str) else "Connection lost"
+                    self._show_disconnect_message()
+                    return
+                
                 # Poll peer status for incoming events
                 if self.peer:
                     # If opponent requested pause, show pause overlay
@@ -162,13 +259,40 @@ class Game:
                         self.paused = True
                         self.ui.is_showing_pause_menu = True
                         self.network_pause_deadline = self.peer.pause_deadline_ts
-                    status = self.peer.get_game_status()
-                    if isinstance(status, dict) and status.get('type') == 'MOVE':
-                        # Apply opponent move
+                        self.ui.opponent_ready_text = None
+                    # Note: Resume check is now handled in the paused block above
+                    # This check here is redundant but kept for safety
+                    if not self.peer.pause_active and self.paused:
+                        # Resume was received, unpause the game
+                        self.paused = False
+                        self.ui.is_showing_pause_menu = False
+                        self.network_pause_deadline = None
+                        self.ui.pause_countdown_seconds = None
+                        self.ui.opponent_ready_text = None
+                # Check for rematch acceptance
+                # Both players restart when both have accepted (either by accepting opponent's request or having their request accepted)
+                if self.peer and self.peer.rematch_accepted and (self.rematch_requested or self.peer.opponent_rematch_request):
+                    # Both players ready, restart game
+                    self._restart_network_game()
+                    continue
+                
+                status = self.peer.get_game_status() if self.peer else None
+                if isinstance(status, dict) and status.get('type') == 'MOVE':
+                    # Apply opponent move
+                    try:
                         self.board.make_move(status['main_row'], status['main_col'], status['sub_row'], status['sub_col'])
                         self.move_count += 1
                         self.is_my_turn = True
-                    # Pause updates are handled via callback updating flags/UI
+                        print(f"Applied opponent move: {status['main_row']},{status['main_col']},{status['sub_row']},{status['sub_col']}")
+                        # Clear status after successful application
+                        self.peer.game_status = None
+                    except Exception as e:
+                        print(f"Error applying opponent move: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        # Clear status so we don't retry invalid moves
+                        self.peer.game_status = None
+                # Pause updates are handled via callback updating flags/UI
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         if self.peer:
@@ -267,7 +391,14 @@ class Game:
                         self.board
                     )
                 
+                # Handle game over (will return if rematch accepted in network mode)
                 self._handle_game_over()
+                
+                # If we're here and it's network mode, check if we should continue (rematch)
+                # Both players restart when both have accepted
+                if self.network_mode and self.peer and self.peer.rematch_accepted and (self.rematch_requested or self.peer.opponent_rematch_request):
+                    # Rematch was accepted, game already restarted in _handle_game_over
+                    continue
                 
             # Cap the frame rate
             self.clock.tick(30)
@@ -319,35 +450,142 @@ class Game:
     def _handle_game_over(self):
         """Handle game over state"""
         waiting = True
+        # Cache the entire board surface to avoid re-rendering every frame
+        board_surface_cached = False
+        game_over_text_surface = None
+        game_over_text_rect = None
+        last_text_state = None
+        needs_redraw = True  # Flag to track if we need to redraw
+        
         while waiting:
+            # Check for network rematch requests
+            if self.network_mode and self.peer:
+                # Check if opponent requested rematch
+                if self.peer.opponent_rematch_request and not self.ui.show_rematch_popup:
+                    self.ui.show_rematch_popup = True
+                    self.ui.rematch_opponent_name = self.peer.opponent_username or "Opponent"
+                    # Need to redraw to show popup
+                    needs_redraw = True
+                    board_surface_cached = False
+                    game_over_text_surface = None
+                
+                # Check if rematch was accepted by both
+                # Both players restart when both have accepted (either by accepting opponent's request or having their request accepted)
+                if self.peer.rematch_accepted and (self.rematch_requested or self.peer.opponent_rematch_request):
+                    # Both players ready, restart game
+                    self._restart_network_game()
+                    return
+                
+                # Check for disconnection
+                if not self.peer.is_connected:
+                    self.disconnected = True
+                    self.disconnect_reason = self.peer.game_status if isinstance(self.peer.game_status, str) else "Connection lost"
+                    waiting = False
+                    return
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    if self.network_mode and self.peer:
+                        self.peer.send_quit()
                     pygame.quit()
                     sys.exit()
+                
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if self.ui.is_pause_button_clicked(event.pos):
                         # ignore pause during game-over; no-op
                         pass
+                    # Handle rematch popup clicks
+                    if self.ui.show_rematch_popup:
+                        choice = self.ui.rematch_popup_button_from_pos(event.pos)
+                        if choice == 'yes':
+                            if self.peer:
+                                self.peer.accept_rematch()
+                                # Mark that we've accepted (either our request or opponent's)
+                                # This ensures we restart when both are ready
+                                self.rematch_requested = True  # Treat accepting as being ready for rematch
+                                # Need to redraw
+                                needs_redraw = True
+                                board_surface_cached = False
+                                game_over_text_surface = None
+                            self.ui.show_rematch_popup = False
+                        elif choice == 'no':
+                            if self.peer:
+                                self.peer.decline_rematch()
+                            waiting = False
+                            return
 
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_r:  # Restart
-                        self.restart_game()
-                        waiting = False
-                    if event.key == pygame.K_q:  # Quit
-                        pygame.quit()
-                        sys.exit()
+                    if self.network_mode:
+                        # Network mode: R requests rematch, Q quits
+                        if event.key == pygame.K_r:  # Request rematch
+                            if self.peer and not self.rematch_requested:
+                                self.peer.request_rematch()
+                                self.rematch_requested = True
+                                # Need to redraw
+                                needs_redraw = True
+                                board_surface_cached = False
+                                game_over_text_surface = None
+                        elif event.key == pygame.K_q:  # Quit
+                            if self.peer:
+                                self.peer.send_quit()
+                            waiting = False
+                            return
+                    else:
+                        # Local mode: R restarts, Q quits
+                        if event.key == pygame.K_r:  # Restart
+                            self.restart_game()
+                            waiting = False
+                        elif event.key == pygame.K_q:  # Quit
+                            pygame.quit()
+                            sys.exit()
             
-            # Display game over message
-            font = pygame.font.SysFont('Arial', 30)
-            if self.board.winner:
-                text = font.render(f"Game over! Player {self.board.winner} wins! Press R to restart or Q to quit", True, (0, 255, 0))
-            else:
-                text = font.render("Game over! It's a draw! Press R to restart or Q to quit", True, (0, 0, 255))
+            # Only redraw if something changed
+            if needs_redraw or not board_surface_cached:
+                # Draw the board once and cache it
+                self.ui.draw_board(self.board, skip_flip=True)  # Skip flip to avoid double-flipping
+                board_surface_cached = True
                 
-            text_rect = text.get_rect(center=(self.ui.width // 2, self.ui.height - 30))
-            self.ui.screen.blit(text, text_rect)
+                # Only re-render text if state changed
+                current_text_state = (
+                    self.network_mode,
+                    self.rematch_requested,
+                    self.board.winner,
+                    self.board.is_draw
+                )
+                
+                if game_over_text_surface is None or current_text_state != last_text_state:
+                    font = pygame.font.SysFont('Arial', 30)
+                    if self.network_mode:
+                        if self.rematch_requested:
+                            text_str = "Rematch requested. Waiting for opponent... Press Q to quit"
+                            text_color = (255, 165, 0)
+                        else:
+                            if self.board.winner:
+                                text_str = f"Game over! Player {self.board.winner} wins! Press R to request rematch or Q to quit"
+                                text_color = (0, 255, 0)
+                            else:
+                                text_str = "Game over! It's a draw! Press R to request rematch or Q to quit"
+                                text_color = (0, 0, 255)
+                    else:
+                        if self.board.winner:
+                            text_str = f"Game over! Player {self.board.winner} wins! Press R to restart or Q to quit"
+                            text_color = (0, 255, 0)
+                        else:
+                            text_str = "Game over! It's a draw! Press R to restart or Q to quit"
+                            text_color = (0, 0, 255)
+                    
+                    game_over_text_surface = font.render(text_str, True, text_color)
+                    game_over_text_rect = game_over_text_surface.get_rect(center=(self.ui.width // 2, self.ui.height - 30))
+                    last_text_state = current_text_state
+                
+                # Blit the cached text surface
+                self.ui.screen.blit(game_over_text_surface, game_over_text_rect)
+                
+                # Only flip once after drawing
+                pygame.display.flip()
+                needs_redraw = False
             
-            pygame.display.flip()
+            self.clock.tick(30)
 
     def _handle_pause_events(self):
         """Handle events while the pause menu is active"""
@@ -639,3 +877,38 @@ class Game:
         print(f"Model+MCTS: {sum(move_times['Model+MCTS'])/len(move_times['Model+MCTS']):.3f} seconds")
         
         return results
+    
+    def _show_disconnect_message(self):
+        """Show disconnect message briefly before returning to menu"""
+        if not self.disconnect_reason:
+            self.disconnect_reason = "Connection lost"
+        
+        # Show message for 2 seconds
+        message_duration = 2.0
+        start_time = time.time()
+        
+        font = pygame.font.SysFont('Arial', 36)
+        small_font = pygame.font.SysFont('Arial', 24)
+        
+        while time.time() - start_time < message_duration:
+            self.ui.screen.fill(self.ui.WHITE)
+            
+            # Draw message
+            main_text = font.render(self.disconnect_reason, True, self.ui.RED)
+            sub_text = small_font.render("Returning to main menu...", True, self.ui.BLACK)
+            
+            main_rect = main_text.get_rect(center=(self.ui.width // 2, self.ui.height // 2 - 30))
+            sub_rect = sub_text.get_rect(center=(self.ui.width // 2, self.ui.height // 2 + 30))
+            
+            self.ui.screen.blit(main_text, main_rect)
+            self.ui.screen.blit(sub_text, sub_rect)
+            
+            pygame.display.flip()
+            
+            # Handle events to prevent freezing
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+            
+            self.clock.tick(30)

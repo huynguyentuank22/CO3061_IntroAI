@@ -1,5 +1,6 @@
 import pygame
 import sys
+import time
 from game import Game
 from peer import PeerNetwork
 
@@ -19,6 +20,7 @@ def main():
     GRAY = (200, 200, 200)
     LIGHT_BLUE = (173, 216, 230)
     GREEN = (0, 255, 0)
+    RED = (255, 0, 0)
     
     # Fonts
     title_font = pygame.font.SysFont('Arial', 48)
@@ -35,10 +37,13 @@ def main():
     main_options = ['Human vs AI', 'Agent vs Agent', 'Human vs Human (Network)', 'Batch Simulation', 'Generate Training Data']
     
     # Menu state
-    menu_state = 'main'  # 'main', 'human_vs_ai', 'agent_vs_agent', 'network_name', 'network_lobby', 'batch_simulation', 'training_data'
+    menu_state = 'main'  # 'main', 'human_vs_ai', 'agent_vs_agent', 'network_name', 'network_lobby', 'batch_simulation', 'training_data', 'disconnect_message'
     first_agent = None  # For agent vs agent mode
     batch_size = 100    # Default batch simulation size
     training_size = 50 # Default training data generation size
+    disconnect_message = None
+    disconnect_start_time = None
+    disconnect_display_duration = 3.0
 
     # Network UI state
     username_input = ""
@@ -194,14 +199,27 @@ def main():
             subtitle = button_font.render(f"Network Lobby - {username_input}", True, BLACK)
             screen.blit(subtitle, (width // 2 - subtitle.get_width() // 2, 180))
 
-            # Ensure peer network created
+            # Ensure peer network created and UDP listener started
             if peer is None:
                 try:
                     peer = PeerNetwork(username_input)
-                    peer.initialize_udp_socket()
+                    if not peer.initialize_udp_socket():
+                        error_text = small_font.render("Failed to initialize network. Check firewall settings.", True, (255, 0, 0))
+                        screen.blit(error_text, (width // 2 - error_text.get_width() // 2, 750))
+                    else:
+                        # Start UDP listener thread
+                        if not peer.start_udp_listener():
+                            error_text = small_font.render("Failed to start network listener.", True, (255, 0, 0))
+                            screen.blit(error_text, (width // 2 - error_text.get_width() // 2, 750))
+                    # Initialize TCP socket for accepting connections
                     peer.initialize_tcp_socket()
-                except Exception:
+                except Exception as e:
+                    print(f"Error creating peer network: {e}")
+                    import traceback
+                    traceback.print_exc()
                     peer = None
+                    error_text = small_font.render(f"Network error: {str(e)}", True, (255, 0, 0))
+                    screen.blit(error_text, (width // 2 - error_text.get_width() // 2, 750))
 
             # Search/Stop button
             button_height = 50
@@ -218,6 +236,16 @@ def main():
                 text = small_font.render(label, True, BLACK)
                 screen.blit(text, (rect.centerx - text.get_width() // 2, rect.centery - text.get_height() // 2))
 
+            # Status text
+            if peer:
+                if is_broadcasting:
+                    status_text = small_font.render("Status: Searching for opponents...", True, GREEN)
+                elif peer.is_connected:
+                    status_text = small_font.render("Status: Connected! Starting game...", True, GREEN)
+                else:
+                    status_text = small_font.render("Status: Listening for requests...", True, BLACK)
+                screen.blit(status_text, (width // 2 - status_text.get_width() // 2, 290))
+
             # Pending requests list
             list_title = small_font.render("Incoming Requests:", True, BLACK)
             screen.blit(list_title, (width // 2 - 150, 310))
@@ -228,7 +256,7 @@ def main():
                 row_rect = pygame.Rect(width // 2 - 300, y, 600, 40)
                 pygame.draw.rect(screen, (245, 245, 245), row_rect)
                 pygame.draw.rect(screen, BLACK, row_rect, 1)
-                label = small_font.render(f"{req['username']}  (signal {req['strength']})", True, BLACK)
+                label = small_font.render(f"{req['username']}  ({req['strength']} seconds)", True, BLACK)
                 screen.blit(label, (row_rect.x + 10, row_rect.y + 8))
                 accept_rect = pygame.Rect(row_rect.right - 110, row_rect.y + 5, 100, 30)
                 if accept_rect.collidepoint(mouse_pos):
@@ -242,21 +270,83 @@ def main():
                 network_buttons.append((accept_rect, ('accept', req['username'])))
                 y += 50
 
-            # Check for game start message
-            if peer:
+            # Check for game start when connected
+            if peer and peer.is_connected:
+                # Check for GAME_START message
                 status = peer.get_game_status()
                 if isinstance(status, dict) and status.get('type') == 'GAME_START':
                     first_player = status.get('first_player')
                     i_start_first = (first_player == username_input)
+                    print(f"Starting network game, first player: {first_player}, I start first: {i_start_first}")
+                    # Clear the game status so we don't start multiple times
+                    peer.game_status = None
                     pygame.display.set_caption("Ultimate Tic Tac Toe - Network Game")
                     game.start_game_network(peer, username_input, i_start_first)
                     pygame.display.set_caption("Ultimate Tic Tac Toe - Menu")
                     # After game returns
                     is_broadcasting = False
-                    menu_state = 'main'
+                    
+                    # Check if game ended due to disconnection
+                    disconnect_message = None
+                    if game.disconnected:
+                        disconnect_message = game.disconnect_reason or "Opponent has left the game"
+                        print(f"Game ended due to disconnection: {disconnect_message}")
+                    
+                    # Clean up peer
+                    if peer:
+                        peer.stop_broadcasting()
+                        if peer.peer_connection:
+                            try:
+                                peer.peer_connection.close()
+                            except:
+                                pass
+                        # Clean up TCP socket
+                        if peer.tcp_socket:
+                            try:
+                                peer.tcp_socket.close()
+                            except:
+                                pass
+                        # Clean up UDP socket
+                        if peer.udp_socket:
+                            try:
+                                peer.udp_socket.close()
+                            except:
+                                pass
                     peer = None
+                    
+                    # Show disconnect message if applicable
+                    if disconnect_message:
+                        menu_state = 'disconnect_message'
+                        disconnect_start_time = time.time()
+                        disconnect_display_duration = 3.0  # Show for 3 seconds
+                    else:
+                        menu_state = 'main'
+                # Debug: show connection status
+                elif peer.is_connected:
+                    # Show waiting message if connected but no GAME_START yet
+                    if not hasattr(peer, '_waiting_shown'):
+                        print(f"Connected to {peer.opponent_username}, waiting for GAME_START...")
+                        peer._waiting_shown = True
 
             buttons = [(search_rect, 'toggle_search'), (listen_rect, 'back')]
+
+        elif menu_state == 'disconnect_message':
+            # Show disconnect message screen
+            if disconnect_message:
+                # Check if display duration has passed
+                if disconnect_start_time and time.time() - disconnect_start_time >= disconnect_display_duration:
+                    menu_state = 'main'
+                    disconnect_message = None
+                    disconnect_start_time = None
+                else:
+                    # Draw disconnect message
+                    message_text = button_font.render(disconnect_message, True, RED)
+                    screen.blit(message_text, (width // 2 - message_text.get_width() // 2, height // 2 - 50))
+                    
+                    return_text = small_font.render("Returning to main menu...", True, BLACK)
+                    screen.blit(return_text, (width // 2 - return_text.get_width() // 2, height // 2 + 20))
+            else:
+                menu_state = 'main'
 
         elif menu_state == 'batch_simulation':
             subtitle = button_font.render("Batch Simulation Settings", True, BLACK)
@@ -407,7 +497,22 @@ def main():
                     # Activate input box
                     input_rect = pygame.Rect(width // 2 - 200, 280, 400, 50)
                     username_active = input_rect.collidepoint(event.pos)
-                # Button handling below
+                
+                # Handle Accept button clicks FIRST (before main button loop)
+                if menu_state == 'network_lobby':
+                    for arect, payload in network_buttons:
+                        if arect.collidepoint(event.pos):
+                            kind, uname = payload
+                            if kind == 'accept' and peer and not peer.is_connected:
+                                print(f"Accepting connection from {uname}")
+                                if peer.accept_connection(uname):
+                                    print(f"Successfully accepted connection from {uname}")
+                                else:
+                                    print(f"Failed to accept connection from {uname}")
+                                # Break to avoid checking other buttons
+                                break
+                
+                # Main button handling
                 for button, option in buttons:
                     if button.collidepoint(event.pos):
                         if menu_state == 'main':
@@ -449,12 +554,6 @@ def main():
                                 peer = None
                                 is_broadcasting = False
                                 menu_state = 'main'
-                            # Accept buttons
-                            for arect, payload in network_buttons:
-                                if arect.collidepoint(event.pos):
-                                    kind, uname = payload
-                                    if kind == 'accept' and peer:
-                                        peer.accept_connection(uname)
 
                         elif menu_state == 'human_vs_ai':
                             # Start game with human vs selected AI
