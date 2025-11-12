@@ -255,8 +255,9 @@ class Game:
                         self.ui.pause_countdown_seconds = None
                         self.ui.opponent_ready_text = None
                 # Check for rematch acceptance
-                if self.peer and self.peer.rematch_accepted and self.rematch_requested:
-                    # Both players accepted, restart game
+                # Both players restart when both have accepted (either by accepting opponent's request or having their request accepted)
+                if self.peer and self.peer.rematch_accepted and (self.rematch_requested or self.peer.opponent_rematch_request):
+                    # Both players ready, restart game
                     self._restart_network_game()
                     continue
                 
@@ -379,7 +380,8 @@ class Game:
                 self._handle_game_over()
                 
                 # If we're here and it's network mode, check if we should continue (rematch)
-                if self.network_mode and self.peer and self.peer.rematch_accepted and self.rematch_requested:
+                # Both players restart when both have accepted
+                if self.network_mode and self.peer and self.peer.rematch_accepted and (self.rematch_requested or self.peer.opponent_rematch_request):
                     # Rematch was accepted, game already restarted in _handle_game_over
                     continue
                 
@@ -433,6 +435,11 @@ class Game:
     def _handle_game_over(self):
         """Handle game over state"""
         waiting = True
+        # Cache the game over text surface to avoid re-rendering every frame
+        game_over_text_surface = None
+        game_over_text_rect = None
+        last_text_state = None
+        
         while waiting:
             # Check for network rematch requests
             if self.network_mode and self.peer:
@@ -440,9 +447,12 @@ class Game:
                 if self.peer.opponent_rematch_request and not self.ui.show_rematch_popup:
                     self.ui.show_rematch_popup = True
                     self.ui.rematch_opponent_name = self.peer.opponent_username or "Opponent"
+                    # Invalidate cached text since state changed
+                    game_over_text_surface = None
                 
                 # Check if rematch was accepted by both
-                if self.peer.rematch_accepted and self.rematch_requested:
+                # Both players restart when both have accepted (either by accepting opponent's request or having their request accepted)
+                if self.peer.rematch_accepted and (self.rematch_requested or self.peer.opponent_rematch_request):
                     # Both players ready, restart game
                     self._restart_network_game()
                     return
@@ -471,10 +481,11 @@ class Game:
                         if choice == 'yes':
                             if self.peer:
                                 self.peer.accept_rematch()
-                                # If we also requested, check if both are ready
-                                if self.rematch_requested:
-                                    self._restart_network_game()
-                                    return
+                                # Mark that we've accepted (either our request or opponent's)
+                                # This ensures we restart when both are ready
+                                self.rematch_requested = True  # Treat accepting as being ready for rematch
+                                # Invalidate cached text since state changed
+                                game_over_text_surface = None
                             self.ui.show_rematch_popup = False
                         elif choice == 'no':
                             if self.peer:
@@ -489,6 +500,8 @@ class Game:
                             if self.peer and not self.rematch_requested:
                                 self.peer.request_rematch()
                                 self.rematch_requested = True
+                                # Invalidate cached text since state changed
+                                game_over_text_surface = None
                         elif event.key == pygame.K_q:  # Quit
                             if self.peer:
                                 self.peer.send_quit()
@@ -503,27 +516,44 @@ class Game:
                             pygame.quit()
                             sys.exit()
             
-            # Draw the board
+            # Draw the board (only once, cached)
             self.ui.draw_board(self.board)
             
-            # Display game over message
-            font = pygame.font.SysFont('Arial', 30)
-            if self.network_mode:
-                if self.rematch_requested:
-                    text = font.render("Rematch requested. Waiting for opponent... Press Q to quit", True, (255, 165, 0))
+            # Only re-render text if state changed
+            current_text_state = (
+                self.network_mode,
+                self.rematch_requested,
+                self.board.winner,
+                self.board.is_draw
+            )
+            
+            if game_over_text_surface is None or current_text_state != last_text_state:
+                font = pygame.font.SysFont('Arial', 30)
+                if self.network_mode:
+                    if self.rematch_requested:
+                        text_str = "Rematch requested. Waiting for opponent... Press Q to quit"
+                        text_color = (255, 165, 0)
+                    else:
+                        if self.board.winner:
+                            text_str = f"Game over! Player {self.board.winner} wins! Press R to request rematch or Q to quit"
+                            text_color = (0, 255, 0)
+                        else:
+                            text_str = "Game over! It's a draw! Press R to request rematch or Q to quit"
+                            text_color = (0, 0, 255)
                 else:
                     if self.board.winner:
-                        text = font.render(f"Game over! Player {self.board.winner} wins! Press R to request rematch or Q to quit", True, (0, 255, 0))
+                        text_str = f"Game over! Player {self.board.winner} wins! Press R to restart or Q to quit"
+                        text_color = (0, 255, 0)
                     else:
-                        text = font.render("Game over! It's a draw! Press R to request rematch or Q to quit", True, (0, 0, 255))
-            else:
-                if self.board.winner:
-                    text = font.render(f"Game over! Player {self.board.winner} wins! Press R to restart or Q to quit", True, (0, 255, 0))
-                else:
-                    text = font.render("Game over! It's a draw! Press R to restart or Q to quit", True, (0, 0, 255))
+                        text_str = "Game over! It's a draw! Press R to restart or Q to quit"
+                        text_color = (0, 0, 255)
                 
-            text_rect = text.get_rect(center=(self.ui.width // 2, self.ui.height - 30))
-            self.ui.screen.blit(text, text_rect)
+                game_over_text_surface = font.render(text_str, True, text_color)
+                game_over_text_rect = game_over_text_surface.get_rect(center=(self.ui.width // 2, self.ui.height - 30))
+                last_text_state = current_text_state
+            
+            # Blit the cached text surface
+            self.ui.screen.blit(game_over_text_surface, game_over_text_rect)
             
             pygame.display.flip()
             self.clock.tick(30)
