@@ -119,8 +119,8 @@ class GameUI:
         if self.is_showing_pause_menu:
             self.draw_pause_menu()
         
-        # Draw rematch popup if active
-        if self.show_rematch_popup:
+        # Draw rematch popup if active (only if flag is True and we have opponent name)
+        if self.show_rematch_popup and self.rematch_opponent_name:
             self.draw_rematch_popup()
         
         # Only flip if not skipped (allows caller to control when to flip)

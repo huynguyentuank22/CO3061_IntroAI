@@ -101,6 +101,10 @@ class Game:
         self.showing_rematch_popup = False
         self.running = True
         
+        # Reset all UI rematch state to ensure clean start
+        self.ui.show_rematch_popup = False
+        self.ui.rematch_opponent_name = None
+        
         # Set up disconnect callback
         def on_disconnect(reason):
             print(f"[DISCONNECT] Disconnect detected: {reason}")
@@ -151,6 +155,12 @@ class Game:
         # Reset game statistics
         self.start_time = time.time()
         self.move_count = 0
+        
+        # Reset all UI rematch state to ensure clean start
+        self.ui.show_rematch_popup = False
+        self.ui.rematch_opponent_name = None
+        self.rematch_requested = False
+        self.showing_rematch_popup = False
     
     def _restart_network_game(self):
         """Restart network game after rematch acceptance"""
@@ -162,14 +172,19 @@ class Game:
         self.start_time = time.time()
         self.move_count = 0
         
-        # Reset rematch state
+        # Reset rematch state - ensure all UI elements are cleared
         self.rematch_requested = False
+        self.showing_rematch_popup = False
         self.ui.show_rematch_popup = False
+        self.ui.rematch_opponent_name = None
         if self.peer:
             self.peer.reset_rematch_state()
         
         # Alternate who goes first (opposite of current)
         self.is_my_turn = not self.is_my_turn
+        
+        # Force a redraw to clear any lingering popups
+        self.ui.draw_board(self.board)
         
         # Continue main loop (game will resume)
     
