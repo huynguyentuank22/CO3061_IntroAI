@@ -149,9 +149,23 @@ class Game:
                             self.ui.opponent_ready_text = "Opponent is ready to continue"
                         else:
                             self.ui.opponent_ready_text = None
+                        
                         # Check if resume was triggered (either by both ready or timer)
-                        if self.peer.try_resume():
-                            # Resume was successful, unpause the game
+                        # This handles the case where we trigger the resume
+                        resume_triggered = self.peer.try_resume()
+                        if resume_triggered:
+                            # Resume was successful (we triggered it), unpause the game
+                            print(f"[PAUSE] Resume triggered by this player")
+                            self.paused = False
+                            self.ui.is_showing_pause_menu = False
+                            self.network_pause_deadline = None
+                            self.ui.pause_countdown_seconds = None
+                            self.ui.opponent_ready_text = None
+                        # Also check if opponent sent RESUME message (pause_active becomes False)
+                        # This handles the case where opponent triggered the resume
+                        elif not self.peer.pause_active:
+                            # Opponent sent RESUME, unpause the game
+                            print(f"[PAUSE] Resume received from opponent")
                             self.paused = False
                             self.ui.is_showing_pause_menu = False
                             self.network_pause_deadline = None
@@ -167,39 +181,40 @@ class Game:
             
             # Special handling for network human vs human
             if self.network_mode:
-                    # Poll peer status for incoming events
-                    if self.peer:
-                        # If opponent requested pause, show pause overlay
-                        if self.peer.pause_active and not self.paused:
-                            self.paused = True
-                            self.ui.is_showing_pause_menu = True
-                            self.network_pause_deadline = self.peer.pause_deadline_ts
-                            self.ui.opponent_ready_text = None
-                        # Check if resume was triggered (either by both ready or timer)
-                        if not self.peer.pause_active and self.paused:
-                            # Resume was received, unpause the game
-                            self.paused = False
-                            self.ui.is_showing_pause_menu = False
-                            self.network_pause_deadline = None
-                            self.ui.pause_countdown_seconds = None
-                            self.ui.opponent_ready_text = None
-                    status = self.peer.get_game_status()
-                    if isinstance(status, dict) and status.get('type') == 'MOVE':
-                        # Apply opponent move
-                        try:
-                            self.board.make_move(status['main_row'], status['main_col'], status['sub_row'], status['sub_col'])
-                            self.move_count += 1
-                            self.is_my_turn = True
-                            print(f"Applied opponent move: {status['main_row']},{status['main_col']},{status['sub_row']},{status['sub_col']}")
-                            # Clear status after successful application
-                            self.peer.game_status = None
-                        except Exception as e:
-                            print(f"Error applying opponent move: {e}")
-                            import traceback
-                            traceback.print_exc()
-                            # Clear status so we don't retry invalid moves
-                            self.peer.game_status = None
-                    # Pause updates are handled via callback updating flags/UI
+                # Poll peer status for incoming events
+                if self.peer:
+                    # If opponent requested pause, show pause overlay
+                    if self.peer.pause_active and not self.paused:
+                        self.paused = True
+                        self.ui.is_showing_pause_menu = True
+                        self.network_pause_deadline = self.peer.pause_deadline_ts
+                        self.ui.opponent_ready_text = None
+                    # Note: Resume check is now handled in the paused block above
+                    # This check here is redundant but kept for safety
+                    if not self.peer.pause_active and self.paused:
+                        # Resume was received, unpause the game
+                        self.paused = False
+                        self.ui.is_showing_pause_menu = False
+                        self.network_pause_deadline = None
+                        self.ui.pause_countdown_seconds = None
+                        self.ui.opponent_ready_text = None
+                status = self.peer.get_game_status()
+                if isinstance(status, dict) and status.get('type') == 'MOVE':
+                    # Apply opponent move
+                    try:
+                        self.board.make_move(status['main_row'], status['main_col'], status['sub_row'], status['sub_col'])
+                        self.move_count += 1
+                        self.is_my_turn = True
+                        print(f"Applied opponent move: {status['main_row']},{status['main_col']},{status['sub_row']},{status['sub_col']}")
+                        # Clear status after successful application
+                        self.peer.game_status = None
+                    except Exception as e:
+                        print(f"Error applying opponent move: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        # Clear status so we don't retry invalid moves
+                        self.peer.game_status = None
+                # Pause updates are handled via callback updating flags/UI
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         if self.peer:
