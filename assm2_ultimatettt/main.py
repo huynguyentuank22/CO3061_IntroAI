@@ -268,10 +268,12 @@ def main():
 
             # Check for game start when connected
             if peer and peer.is_connected:
+                # Check for GAME_START message
                 status = peer.get_game_status()
                 if isinstance(status, dict) and status.get('type') == 'GAME_START':
                     first_player = status.get('first_player')
                     i_start_first = (first_player == username_input)
+                    print(f"Starting network game, first player: {first_player}, I start first: {i_start_first}")
                     pygame.display.set_caption("Ultimate Tic Tac Toe - Network Game")
                     game.start_game_network(peer, username_input, i_start_first)
                     pygame.display.set_caption("Ultimate Tic Tac Toe - Menu")
@@ -287,6 +289,10 @@ def main():
                             except:
                                 pass
                     peer = None
+                # Also check if we just connected and need to wait for GAME_START
+                elif peer.is_connected and not hasattr(peer, '_game_start_checked'):
+                    # Give it a moment for GAME_START to arrive
+                    pass
 
             buttons = [(search_rect, 'toggle_search'), (listen_rect, 'back')]
 
@@ -481,12 +487,20 @@ def main():
                                 peer = None
                                 is_broadcasting = False
                                 menu_state = 'main'
-                            # Accept buttons
+                            # Accept buttons - handle outside main button loop
+                            pass  # Accept buttons handled below
+                        
+                        # Handle Accept button clicks (outside main button loop)
+                        if menu_state == 'network_lobby':
                             for arect, payload in network_buttons:
                                 if arect.collidepoint(event.pos):
                                     kind, uname = payload
-                                    if kind == 'accept' and peer:
-                                        peer.accept_connection(uname)
+                                    if kind == 'accept' and peer and not peer.is_connected:
+                                        print(f"Accepting connection from {uname}")
+                                        if peer.accept_connection(uname):
+                                            print(f"Successfully accepted connection from {uname}")
+                                        else:
+                                            print(f"Failed to accept connection from {uname}")
 
                         elif menu_state == 'human_vs_ai':
                             # Start game with human vs selected AI

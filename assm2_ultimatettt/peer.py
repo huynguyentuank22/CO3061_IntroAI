@@ -99,9 +99,13 @@ class PeerNetwork:
 
     def listen_for_tcp(self):
         """Listen for incoming TCP connections."""
+        print(f"TCP listener started for {self.username} on port {self.tcp_port}")
         while True:
             try:
+                if not self.tcp_socket:
+                    break
                 client_socket, client_address = self.tcp_socket.accept()
+                print(f"TCP connection attempt from {client_address}, is_connected={self.is_connected}")
                 if not self.is_connected:
                     self.peer_connection = client_socket
                     self.is_connected = True
@@ -111,17 +115,29 @@ class PeerNetwork:
                     threading.Thread(target=self.handle_peer_messages, 
                                    daemon=True).start()
                     
+                    # Wait a moment for message handler to start
+                    time.sleep(0.1)
+                    
                     # Send connection confirmation
                     self.send_message({
                         'type': 'CONNECTION_ACCEPTED',
                         'username': self.username
                     })
+                    print(f"Sent CONNECTION_ACCEPTED to {client_address}")
                 else:
                     # Reject connection if already connected
+                    print(f"Rejecting connection from {client_address} - already connected")
                     client_socket.close()
-            except Exception as e:
-                print(f"TCP accept error: {e}")
+            except socket.error as e:
+                if self.tcp_socket:
+                    print(f"TCP accept error: {e}")
                 break
+            except Exception as e:
+                print(f"TCP listener error: {e}")
+                import traceback
+                traceback.print_exc()
+                if not self.tcp_socket:
+                    break
 
     def start_udp_listener(self):
         """Start the UDP listener thread (non-blocking)."""
@@ -345,6 +361,10 @@ class PeerNetwork:
 
     def accept_connection(self, opponent_username):
         """Accept a connection request from a specific user."""
+        if self.is_connected:
+            print(f"Already connected, cannot accept connection from {opponent_username}")
+            return False
+            
         with self.request_lock:
             request = None
             for req in self.pending_requests:
@@ -360,24 +380,22 @@ class PeerNetwork:
             # Stop broadcasting if we're searching
             self.stop_broadcasting()
             
-            # Initialize TCP socket if needed (for accepting connections)
-            if not self.tcp_socket:
-                if not self.initialize_tcp_socket():
-                    return False
-            
-            # Connect to peer
+            # Connect to peer (they are listening on their TCP port)
             peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             print(f"Attempting to connect to {request['ip']}:{request['tcp_port']}")
             # Set a timeout for the connection attempt
             peer_socket.settimeout(5)
             try:
                 peer_socket.connect((request['ip'], request['tcp_port']))
+                print(f"Successfully connected to {request['ip']}:{request['tcp_port']}")
             except socket.timeout:
                 print(f"Connection timeout to {request['ip']}:{request['tcp_port']}")
                 peer_socket.close()
                 return False
             except Exception as e:
                 print(f"Connection failed: {e}")
+                import traceback
+                traceback.print_exc()
                 peer_socket.close()
                 return False
             
@@ -396,23 +414,20 @@ class PeerNetwork:
             with self.request_lock:
                 self.pending_requests = []
             
+            # Wait a moment for message handler to start
+            time.sleep(0.15)
+            
             # Send connection confirmation
             self.send_message({
                 'type': 'CONNECTION_ACCEPTED',
                 'username': self.username
             })
+            print(f"Sent CONNECTION_ACCEPTED to {opponent_username}")
             
             # Wait a moment for CONNECTION_ACCEPTED to be received by the other side
-            time.sleep(0.1)
-            
-            # Decide first player deterministically by username lexical order
-            first_player = min(self.username, opponent_username)
-            self.send_message({
-                'type': 'GAME_START',
-                'first_player': first_player
-            })
-            
-            self.accepted_connection = True
+            # The broadcaster will send GAME_START after receiving CONNECTION_ACCEPTED
+            # So we don't send GAME_START here - we wait for it from the broadcaster
+            self.accepted_connection = False  # We are the acceptor, not the one who accepted
             
             return True
         except Exception as e:
@@ -425,6 +440,7 @@ class PeerNetwork:
                     peer_socket.close()
             except:
                 pass
+            self.is_connected = False
             return False
 
     def reject_connection(self, username):
@@ -473,26 +489,34 @@ class PeerNetwork:
                             'is_draw': result.get('is_draw')
                         }
                 elif message.get('type') == 'GAME_START':
-                    print(f"Game starting, first player: {message.get('first_player')}")
+                    first_player = message.get('first_player')
+                    print(f"Received GAME_START, first player: {first_player}")
+                    # Store in game_status so main loop can detect it
+                    self.game_status = {
+                        'type': 'GAME_START',
+                        'first_player': first_player
+                    }
                     if self.on_game_start:
-                        self.on_game_start(message.get('first_player'))
-                    else:
-                        self.game_status = {
-                            'type': 'GAME_START',
-                            'first_player': message.get('first_player')
-                        }
+                        self.on_game_start(first_player)
                 elif message.get('type') == 'CONNECTION_ACCEPTED':
                     # store opponent username
                     self.opponent_username = message.get('username')
-                    # If we were broadcasting and they accepted, send GAME_START
-                    if not self.accepted_connection and self.opponent_username:
-                        time.sleep(0.1)  # Brief delay
+                    print(f"Received CONNECTION_ACCEPTED from {self.opponent_username}")
+                    # If we were broadcasting (TCP listener accepted connection), send GAME_START
+                    # The acceptor connects to us, so we send GAME_START
+                    if self.opponent_username:
+                        time.sleep(0.1)  # Brief delay to ensure connection is stable
                         first_player = min(self.username, self.opponent_username)
                         self.send_message({
                             'type': 'GAME_START',
                             'first_player': first_player
                         })
                         print(f"Sent GAME_START, first player: {first_player}")
+                        # Store in game_status so main loop can detect it
+                        self.game_status = {
+                            'type': 'GAME_START',
+                            'first_player': first_player
+                        }
                 elif message.get('type') == 'DISCONNECT':
                     self.handle_disconnect(message.get('message', 'Opponent disconnected'))
                     break
