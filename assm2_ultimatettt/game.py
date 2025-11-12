@@ -52,6 +52,8 @@ class Game:
         self.move_count = 0
         self.paused = False
         self.network_pause_deadline = None
+        self.disconnected = False
+        self.disconnect_reason = None
         
     def start_game(self, player_o_type='Random'):
         """Start the game with human player vs selected AI opponent"""
@@ -90,7 +92,20 @@ class Game:
         # Hide restart in pause menu for network mode
         self.ui.show_restart_in_pause = False
         self.ui.pause_countdown_seconds = None
+        self.disconnected = False
+        self.disconnect_reason = None
         self.running = True
+        
+        # Set up disconnect callback
+        def on_disconnect(reason):
+            print(f"[DISCONNECT] Disconnect detected: {reason}")
+            self.disconnected = True
+            self.disconnect_reason = reason
+            self.running = False
+        
+        if self.peer:
+            self.peer.on_disconnect = on_disconnect
+        
         self.main_loop()
     
     def start_game_agents(self, player_x_type, player_o_type):
@@ -181,6 +196,19 @@ class Game:
             
             # Special handling for network human vs human
             if self.network_mode:
+                # Check for disconnection first
+                if self.disconnected:
+                    # Show disconnect message briefly before returning
+                    self._show_disconnect_message()
+                    return
+                
+                # Check if peer connection is lost
+                if self.peer and not self.peer.is_connected:
+                    self.disconnected = True
+                    self.disconnect_reason = self.peer.game_status if isinstance(self.peer.game_status, str) else "Connection lost"
+                    self._show_disconnect_message()
+                    return
+                
                 # Poll peer status for incoming events
                 if self.peer:
                     # If opponent requested pause, show pause overlay
@@ -198,7 +226,7 @@ class Game:
                         self.network_pause_deadline = None
                         self.ui.pause_countdown_seconds = None
                         self.ui.opponent_ready_text = None
-                status = self.peer.get_game_status()
+                status = self.peer.get_game_status() if self.peer else None
                 if isinstance(status, dict) and status.get('type') == 'MOVE':
                     # Apply opponent move
                     try:
@@ -685,3 +713,38 @@ class Game:
         print(f"Model+MCTS: {sum(move_times['Model+MCTS'])/len(move_times['Model+MCTS']):.3f} seconds")
         
         return results
+    
+    def _show_disconnect_message(self):
+        """Show disconnect message briefly before returning to menu"""
+        if not self.disconnect_reason:
+            self.disconnect_reason = "Connection lost"
+        
+        # Show message for 2 seconds
+        message_duration = 2.0
+        start_time = time.time()
+        
+        font = pygame.font.SysFont('Arial', 36)
+        small_font = pygame.font.SysFont('Arial', 24)
+        
+        while time.time() - start_time < message_duration:
+            self.ui.screen.fill(self.ui.WHITE)
+            
+            # Draw message
+            main_text = font.render(self.disconnect_reason, True, self.ui.RED)
+            sub_text = small_font.render("Returning to main menu...", True, self.ui.BLACK)
+            
+            main_rect = main_text.get_rect(center=(self.ui.width // 2, self.ui.height // 2 - 30))
+            sub_rect = sub_text.get_rect(center=(self.ui.width // 2, self.ui.height // 2 + 30))
+            
+            self.ui.screen.blit(main_text, main_rect)
+            self.ui.screen.blit(sub_text, sub_rect)
+            
+            pygame.display.flip()
+            
+            # Handle events to prevent freezing
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+            
+            self.clock.tick(30)

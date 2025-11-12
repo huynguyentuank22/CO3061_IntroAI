@@ -36,10 +36,13 @@ def main():
     main_options = ['Human vs AI', 'Agent vs Agent', 'Human vs Human (Network)', 'Batch Simulation', 'Generate Training Data']
     
     # Menu state
-    menu_state = 'main'  # 'main', 'human_vs_ai', 'agent_vs_agent', 'network_name', 'network_lobby', 'batch_simulation', 'training_data'
+    menu_state = 'main'  # 'main', 'human_vs_ai', 'agent_vs_agent', 'network_name', 'network_lobby', 'batch_simulation', 'training_data', 'disconnect_message'
     first_agent = None  # For agent vs agent mode
     batch_size = 100    # Default batch simulation size
     training_size = 50 # Default training data generation size
+    disconnect_message = None
+    disconnect_start_time = None
+    disconnect_display_duration = 3.0
 
     # Network UI state
     username_input = ""
@@ -281,7 +284,13 @@ def main():
                     pygame.display.set_caption("Ultimate Tic Tac Toe - Menu")
                     # After game returns
                     is_broadcasting = False
-                    menu_state = 'main'
+                    
+                    # Check if game ended due to disconnection
+                    disconnect_message = None
+                    if game.disconnected:
+                        disconnect_message = game.disconnect_reason or "Opponent has left the game"
+                        print(f"Game ended due to disconnection: {disconnect_message}")
+                    
                     # Clean up peer
                     if peer:
                         peer.stop_broadcasting()
@@ -290,7 +299,27 @@ def main():
                                 peer.peer_connection.close()
                             except:
                                 pass
+                        # Clean up TCP socket
+                        if peer.tcp_socket:
+                            try:
+                                peer.tcp_socket.close()
+                            except:
+                                pass
+                        # Clean up UDP socket
+                        if peer.udp_socket:
+                            try:
+                                peer.udp_socket.close()
+                            except:
+                                pass
                     peer = None
+                    
+                    # Show disconnect message if applicable
+                    if disconnect_message:
+                        menu_state = 'disconnect_message'
+                        disconnect_start_time = time.time()
+                        disconnect_display_duration = 3.0  # Show for 3 seconds
+                    else:
+                        menu_state = 'main'
                 # Debug: show connection status
                 elif peer.is_connected:
                     # Show waiting message if connected but no GAME_START yet
@@ -299,6 +328,24 @@ def main():
                         peer._waiting_shown = True
 
             buttons = [(search_rect, 'toggle_search'), (listen_rect, 'back')]
+
+        elif menu_state == 'disconnect_message':
+            # Show disconnect message screen
+            if disconnect_message:
+                # Check if display duration has passed
+                if disconnect_start_time and time.time() - disconnect_start_time >= disconnect_display_duration:
+                    menu_state = 'main'
+                    disconnect_message = None
+                    disconnect_start_time = None
+                else:
+                    # Draw disconnect message
+                    message_text = button_font.render(disconnect_message, True, RED)
+                    screen.blit(message_text, (width // 2 - message_text.get_width() // 2, height // 2 - 50))
+                    
+                    return_text = small_font.render("Returning to main menu...", True, BLACK)
+                    screen.blit(return_text, (width // 2 - return_text.get_width() // 2, height // 2 + 20))
+            else:
+                menu_state = 'main'
 
         elif menu_state == 'batch_simulation':
             subtitle = button_font.render("Batch Simulation Settings", True, BLACK)

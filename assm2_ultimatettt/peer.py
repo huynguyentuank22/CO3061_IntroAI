@@ -622,16 +622,41 @@ class PeerNetwork:
 
     def handle_disconnect(self, reason="Connection lost"):
         """Handle disconnection with cleanup."""
+        print(f"[DISCONNECT] Handling disconnect: {reason}")
         self.is_connected = False
         self.game_status = reason
+        
+        # Close peer connection
         if self.peer_connection:
             try:
                 self.peer_connection.close()
             except:
                 pass
         self.peer_connection = None
+        
+        # Stop broadcasting
+        self.stop_broadcasting()
+        
+        # Close TCP socket
+        if self.tcp_socket:
+            try:
+                self.tcp_socket.close()
+            except:
+                pass
+            self.tcp_socket = None
+        
+        # Close UDP socket
+        if self.udp_socket:
+            try:
+                self.udp_socket.close()
+            except:
+                pass
+            self.udp_socket = None
+        
         self.opponent_username = None
         print(f"Peer connection lost: {reason}")
+        
+        # Call disconnect callback
         if self.on_disconnect:
             self.on_disconnect(reason)
 
@@ -648,12 +673,14 @@ class PeerNetwork:
                 print(f"Sent: {message.get('type', 'unknown')} ({message_len} bytes)")
             except (BrokenPipeError, ConnectionResetError, OSError) as e:
                 print(f"Message send error (connection lost): {e}")
-                self.handle_disconnect("Connection lost while sending")
+                if self.is_connected:  # Only handle disconnect if we think we're still connected
+                    self.handle_disconnect("Connection lost while sending")
             except Exception as e:
                 print(f"Message send error: {e}")
                 import traceback
                 traceback.print_exc()
-                self.is_connected = False
+                if self.is_connected:  # Only handle disconnect if we think we're still connected
+                    self.handle_disconnect("Error sending message")
 
     def get_game_status(self):
         """Get current game status."""
