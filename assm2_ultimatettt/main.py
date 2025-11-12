@@ -20,6 +20,7 @@ def main():
     GRAY = (200, 200, 200)
     LIGHT_BLUE = (173, 216, 230)
     GREEN = (0, 255, 0)
+    RED = (255, 0, 0)
     
     # Fonts
     title_font = pygame.font.SysFont('Arial', 48)

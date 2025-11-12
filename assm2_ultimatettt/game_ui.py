@@ -45,6 +45,13 @@ class GameUI:
         self.pause_countdown_seconds = None
         # Indicator for opponent ready status
         self.opponent_ready_text = None
+        # Rematch popup
+        self.show_rematch_popup = False
+        self.rematch_opponent_name = None
+        self.rematch_popup_buttons = {
+            'yes': pygame.Rect(self.width // 2 - 150, self.height // 2 + 40, 120, 50),
+            'no': pygame.Rect(self.width // 2 + 30, self.height // 2 + 40, 120, 50)
+        }
         
     def draw_board(self, board):
         """Draw the entire Ultimate Tic Tac Toe board"""
@@ -111,6 +118,10 @@ class GameUI:
         # Draw pause overlay if active
         if self.is_showing_pause_menu:
             self.draw_pause_menu()
+        
+        # Draw rematch popup if active
+        if self.show_rematch_popup:
+            self.draw_rematch_popup()
         
         pygame.display.flip()
     
@@ -257,3 +268,46 @@ class GameUI:
         row = y_offset // self.cell_size
         
         return board_row, board_col, row, col
+    
+    def draw_rematch_popup(self):
+        """Draw rematch request popup"""
+        # Semi-transparent overlay
+        overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 150))
+        self.screen.blit(overlay, (0, 0))
+        
+        # Popup panel
+        panel_rect = pygame.Rect(self.width // 2 - 250, self.height // 2 - 100, 500, 200)
+        pygame.draw.rect(self.screen, (250, 250, 250), panel_rect, border_radius=8)
+        pygame.draw.rect(self.screen, self.BLACK, panel_rect, 2, border_radius=8)
+        
+        # Title
+        title = self.font.render("Rematch Request", True, self.BLACK)
+        self.screen.blit(title, (panel_rect.centerx - title.get_width() // 2, panel_rect.top + 20))
+        
+        # Message
+        if self.rematch_opponent_name:
+            message_text = f"{self.rematch_opponent_name} wants to play again."
+            message = self.small_font.render(message_text, True, self.BLACK)
+            self.screen.blit(message, (panel_rect.centerx - message.get_width() // 2, panel_rect.top + 60))
+        
+        question = self.small_font.render("Accept?", True, self.BLACK)
+        self.screen.blit(question, (panel_rect.centerx - question.get_width() // 2, panel_rect.top + 90))
+        
+        # Buttons
+        mouse_pos = pygame.mouse.get_pos()
+        for key, rect in self.rematch_popup_buttons.items():
+            color = self.LIGHT_BLUE if rect.collidepoint(mouse_pos) else self.GRAY
+            pygame.draw.rect(self.screen, color, rect, border_radius=6)
+            pygame.draw.rect(self.screen, self.BLACK, rect, 2, border_radius=6)
+            label = "Yes" if key == 'yes' else "No"
+            text = self.small_font.render(label, True, self.BLACK)
+            self.screen.blit(text, (rect.centerx - text.get_width() // 2, 
+                                   rect.centery - text.get_height() // 2))
+    
+    def rematch_popup_button_from_pos(self, pos):
+        """Return which rematch popup button is clicked, or None"""
+        for key, rect in self.rematch_popup_buttons.items():
+            if rect.collidepoint(pos):
+                return key
+        return None

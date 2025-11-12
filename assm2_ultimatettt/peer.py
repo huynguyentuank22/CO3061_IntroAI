@@ -39,6 +39,10 @@ class PeerNetwork:
         self.opponent_pause_count = 0
         self.my_ack = False
         self.opponent_ack = False
+        # Rematch state
+        self.rematch_requested = False
+        self.rematch_accepted = False
+        self.opponent_rematch_request = False
 
     def get_local_ip(self):
         """Get local IP address."""
@@ -606,6 +610,18 @@ class PeerNetwork:
                 elif message.get('type') == 'QUIT':
                     self.handle_disconnect("Opponent quit the game")
                     break
+                elif message.get('type') == 'PLAY_AGAIN_REQUEST':
+                    # Opponent wants to play again
+                    self.opponent_rematch_request = True
+                    print(f"[REMATCH] Opponent wants to play again")
+                elif message.get('type') == 'PLAY_AGAIN_ACCEPT':
+                    # Opponent accepted rematch
+                    self.rematch_accepted = True
+                    print(f"[REMATCH] Opponent accepted rematch")
+                elif message.get('type') == 'PLAY_AGAIN_DECLINE':
+                    # Opponent declined rematch
+                    self.handle_disconnect("Opponent declined to play again")
+                    break
                 else:
                     print(f"Received unknown message type: {message}")
             except (ConnectionResetError, BrokenPipeError, OSError) as e:
@@ -773,6 +789,38 @@ class PeerNetwork:
             self.send_message({'type': 'QUIT'})
         finally:
             self.handle_disconnect("You quit the game")
+    
+    def request_rematch(self):
+        """Send rematch request to opponent"""
+        if not self.is_connected:
+            return False
+        self.rematch_requested = True
+        self.send_message({'type': 'PLAY_AGAIN_REQUEST'})
+        print(f"[REMATCH] Sent rematch request")
+        return True
+    
+    def accept_rematch(self):
+        """Accept opponent's rematch request"""
+        if not self.is_connected:
+            return False
+        self.rematch_accepted = True
+        self.send_message({'type': 'PLAY_AGAIN_ACCEPT'})
+        print(f"[REMATCH] Accepted rematch")
+        return True
+    
+    def decline_rematch(self):
+        """Decline opponent's rematch request"""
+        if not self.is_connected:
+            return False
+        self.send_message({'type': 'PLAY_AGAIN_DECLINE'})
+        print(f"[REMATCH] Declined rematch")
+        return True
+    
+    def reset_rematch_state(self):
+        """Reset rematch state for new game"""
+        self.rematch_requested = False
+        self.rematch_accepted = False
+        self.opponent_rematch_request = False
 
 
 def main():
