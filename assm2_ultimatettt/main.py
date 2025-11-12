@@ -256,7 +256,7 @@ def main():
                 row_rect = pygame.Rect(width // 2 - 300, y, 600, 40)
                 pygame.draw.rect(screen, (245, 245, 245), row_rect)
                 pygame.draw.rect(screen, BLACK, row_rect, 1)
-                label = small_font.render(f"{req['username']}  (signal {req['strength']})", True, BLACK)
+                label = small_font.render(f"{req['username']}  ({req['strength']} seconds)", True, BLACK)
                 screen.blit(label, (row_rect.x + 10, row_rect.y + 8))
                 accept_rect = pygame.Rect(row_rect.right - 110, row_rect.y + 5, 100, 30)
                 if accept_rect.collidepoint(mouse_pos):

@@ -435,10 +435,12 @@ class Game:
     def _handle_game_over(self):
         """Handle game over state"""
         waiting = True
-        # Cache the game over text surface to avoid re-rendering every frame
+        # Cache the entire board surface to avoid re-rendering every frame
+        board_surface_cached = False
         game_over_text_surface = None
         game_over_text_rect = None
         last_text_state = None
+        needs_redraw = True  # Flag to track if we need to redraw
         
         while waiting:
             # Check for network rematch requests
@@ -447,7 +449,9 @@ class Game:
                 if self.peer.opponent_rematch_request and not self.ui.show_rematch_popup:
                     self.ui.show_rematch_popup = True
                     self.ui.rematch_opponent_name = self.peer.opponent_username or "Opponent"
-                    # Invalidate cached text since state changed
+                    # Need to redraw to show popup
+                    needs_redraw = True
+                    board_surface_cached = False
                     game_over_text_surface = None
                 
                 # Check if rematch was accepted by both
@@ -484,7 +488,9 @@ class Game:
                                 # Mark that we've accepted (either our request or opponent's)
                                 # This ensures we restart when both are ready
                                 self.rematch_requested = True  # Treat accepting as being ready for rematch
-                                # Invalidate cached text since state changed
+                                # Need to redraw
+                                needs_redraw = True
+                                board_surface_cached = False
                                 game_over_text_surface = None
                             self.ui.show_rematch_popup = False
                         elif choice == 'no':
@@ -500,7 +506,9 @@ class Game:
                             if self.peer and not self.rematch_requested:
                                 self.peer.request_rematch()
                                 self.rematch_requested = True
-                                # Invalidate cached text since state changed
+                                # Need to redraw
+                                needs_redraw = True
+                                board_surface_cached = False
                                 game_over_text_surface = None
                         elif event.key == pygame.K_q:  # Quit
                             if self.peer:
@@ -516,46 +524,52 @@ class Game:
                             pygame.quit()
                             sys.exit()
             
-            # Draw the board (only once, cached)
-            self.ui.draw_board(self.board)
-            
-            # Only re-render text if state changed
-            current_text_state = (
-                self.network_mode,
-                self.rematch_requested,
-                self.board.winner,
-                self.board.is_draw
-            )
-            
-            if game_over_text_surface is None or current_text_state != last_text_state:
-                font = pygame.font.SysFont('Arial', 30)
-                if self.network_mode:
-                    if self.rematch_requested:
-                        text_str = "Rematch requested. Waiting for opponent... Press Q to quit"
-                        text_color = (255, 165, 0)
+            # Only redraw if something changed
+            if needs_redraw or not board_surface_cached:
+                # Draw the board once and cache it
+                self.ui.draw_board(self.board, skip_flip=True)  # Skip flip to avoid double-flipping
+                board_surface_cached = True
+                
+                # Only re-render text if state changed
+                current_text_state = (
+                    self.network_mode,
+                    self.rematch_requested,
+                    self.board.winner,
+                    self.board.is_draw
+                )
+                
+                if game_over_text_surface is None or current_text_state != last_text_state:
+                    font = pygame.font.SysFont('Arial', 30)
+                    if self.network_mode:
+                        if self.rematch_requested:
+                            text_str = "Rematch requested. Waiting for opponent... Press Q to quit"
+                            text_color = (255, 165, 0)
+                        else:
+                            if self.board.winner:
+                                text_str = f"Game over! Player {self.board.winner} wins! Press R to request rematch or Q to quit"
+                                text_color = (0, 255, 0)
+                            else:
+                                text_str = "Game over! It's a draw! Press R to request rematch or Q to quit"
+                                text_color = (0, 0, 255)
                     else:
                         if self.board.winner:
-                            text_str = f"Game over! Player {self.board.winner} wins! Press R to request rematch or Q to quit"
+                            text_str = f"Game over! Player {self.board.winner} wins! Press R to restart or Q to quit"
                             text_color = (0, 255, 0)
                         else:
-                            text_str = "Game over! It's a draw! Press R to request rematch or Q to quit"
+                            text_str = "Game over! It's a draw! Press R to restart or Q to quit"
                             text_color = (0, 0, 255)
-                else:
-                    if self.board.winner:
-                        text_str = f"Game over! Player {self.board.winner} wins! Press R to restart or Q to quit"
-                        text_color = (0, 255, 0)
-                    else:
-                        text_str = "Game over! It's a draw! Press R to restart or Q to quit"
-                        text_color = (0, 0, 255)
+                    
+                    game_over_text_surface = font.render(text_str, True, text_color)
+                    game_over_text_rect = game_over_text_surface.get_rect(center=(self.ui.width // 2, self.ui.height - 30))
+                    last_text_state = current_text_state
                 
-                game_over_text_surface = font.render(text_str, True, text_color)
-                game_over_text_rect = game_over_text_surface.get_rect(center=(self.ui.width // 2, self.ui.height - 30))
-                last_text_state = current_text_state
+                # Blit the cached text surface
+                self.ui.screen.blit(game_over_text_surface, game_over_text_rect)
+                
+                # Only flip once after drawing
+                pygame.display.flip()
+                needs_redraw = False
             
-            # Blit the cached text surface
-            self.ui.screen.blit(game_over_text_surface, game_over_text_rect)
-            
-            pygame.display.flip()
             self.clock.tick(30)
 
     def _handle_pause_events(self):

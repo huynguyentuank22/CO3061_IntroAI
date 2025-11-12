@@ -53,7 +53,7 @@ class GameUI:
             'no': pygame.Rect(self.width // 2 + 30, self.height // 2 + 40, 120, 50)
         }
         
-    def draw_board(self, board):
+    def draw_board(self, board, skip_flip=False):
         """Draw the entire Ultimate Tic Tac Toe board"""
         self.screen.fill(self.WHITE)
         
@@ -123,7 +123,9 @@ class GameUI:
         if self.show_rematch_popup:
             self.draw_rematch_popup()
         
-        pygame.display.flip()
+        # Only flip if not skipped (allows caller to control when to flip)
+        if not skip_flip:
+            pygame.display.flip()
     
     def draw_pause_button(self):
         """Draw the pause button in the top UI bar"""
