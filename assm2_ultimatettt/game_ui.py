@@ -43,6 +43,8 @@ class GameUI:
         self.show_restart_in_pause = True
         # Optional countdown seconds display in pause menu (network mode)
         self.pause_countdown_seconds = None
+        # Indicator for opponent ready status
+        self.opponent_ready_text = None
         
     def draw_board(self, board):
         """Draw the entire Ultimate Tic Tac Toe board"""
@@ -166,6 +168,12 @@ class GameUI:
             countdown_text = self.small_font.render(f"Resuming in: {int(self.pause_countdown_seconds)}s", True, self.BLACK)
             self.screen.blit(countdown_text, (panel_rect.centerx - countdown_text.get_width() // 2,
                                               panel_rect.top + 70))
+        
+        # Show opponent ready status if available
+        if self.opponent_ready_text:
+            ready_text = self.small_font.render(self.opponent_ready_text, True, self.GREEN)
+            self.screen.blit(ready_text, (panel_rect.centerx - ready_text.get_width() // 2,
+                                          panel_rect.top + 100))
 
     def pause_menu_button_from_pos(self, pos):
         """Return which pause menu button is clicked, or None"""

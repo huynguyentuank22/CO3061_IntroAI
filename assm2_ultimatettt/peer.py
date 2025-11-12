@@ -592,8 +592,10 @@ class PeerNetwork:
                             'my_pause_count': self.my_pause_count,
                             'opponent_pause_count': self.opponent_pause_count
                         })
+                    # Check if both are ready or time expired, and try to resume
+                    self.try_resume()
                 elif message.get('type') == 'RESUME':
-                    # Resume game
+                    # Resume game - opponent sent resume signal
                     self.pause_active = False
                     self.pause_deadline_ts = None
                     self.my_ack = False
@@ -711,17 +713,22 @@ class PeerNetwork:
                 'my_pause_count': self.my_pause_count,
                 'opponent_pause_count': self.opponent_pause_count
             })
+        # Check if both are ready or time expired, and try to resume
+        self.try_resume()
 
     def try_resume(self):
         # Resume if both ack or time expired
         if not self.pause_active:
             return False
         now = time.time()
-        if (self.my_ack and self.opponent_ack) or (self.pause_deadline_ts and now >= self.pause_deadline_ts):
+        # Check if both players are ready OR timer has expired
+        should_resume = (self.my_ack and self.opponent_ack) or (self.pause_deadline_ts and now >= self.pause_deadline_ts)
+        if should_resume:
             self.pause_active = False
             self.pause_deadline_ts = None
             self.my_ack = False
             self.opponent_ack = False
+            # Send RESUME message to opponent
             self.send_message({'type': 'RESUME'})
             if self.on_pause_update:
                 self.on_pause_update({'pause_active': False})

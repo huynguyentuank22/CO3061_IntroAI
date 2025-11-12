@@ -142,9 +142,21 @@ class Game:
                 if self.network_mode and self.network_pause_deadline:
                     remaining = max(0, int(self.network_pause_deadline - time.time()))
                     self.ui.pause_countdown_seconds = remaining
-                    # Attempt auto-resume if peer thinks it's time
+                    # Continuously check if timer expired or both players are ready
                     if self.peer:
-                        self.peer.try_resume()
+                        # Update opponent ready indicator
+                        if self.peer.opponent_ack:
+                            self.ui.opponent_ready_text = "Opponent is ready to continue"
+                        else:
+                            self.ui.opponent_ready_text = None
+                        # Check if resume was triggered (either by both ready or timer)
+                        if self.peer.try_resume():
+                            # Resume was successful, unpause the game
+                            self.paused = False
+                            self.ui.is_showing_pause_menu = False
+                            self.network_pause_deadline = None
+                            self.ui.pause_countdown_seconds = None
+                            self.ui.opponent_ready_text = None
                 self._handle_pause_events()
                 self.clock.tick(30)
                 continue
@@ -155,13 +167,22 @@ class Game:
             
             # Special handling for network human vs human
             if self.network_mode:
-                # Poll peer status for incoming events
-                if self.peer:
-                    # If opponent requested pause, show pause overlay
-                    if self.peer.pause_active and not self.paused:
-                        self.paused = True
-                        self.ui.is_showing_pause_menu = True
-                        self.network_pause_deadline = self.peer.pause_deadline_ts
+                    # Poll peer status for incoming events
+                    if self.peer:
+                        # If opponent requested pause, show pause overlay
+                        if self.peer.pause_active and not self.paused:
+                            self.paused = True
+                            self.ui.is_showing_pause_menu = True
+                            self.network_pause_deadline = self.peer.pause_deadline_ts
+                            self.ui.opponent_ready_text = None
+                        # Check if resume was triggered (either by both ready or timer)
+                        if not self.peer.pause_active and self.paused:
+                            # Resume was received, unpause the game
+                            self.paused = False
+                            self.ui.is_showing_pause_menu = False
+                            self.network_pause_deadline = None
+                            self.ui.pause_countdown_seconds = None
+                            self.ui.opponent_ready_text = None
                     status = self.peer.get_game_status()
                     if isinstance(status, dict) and status.get('type') == 'MOVE':
                         # Apply opponent move
