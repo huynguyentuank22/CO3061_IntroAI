@@ -165,9 +165,17 @@ class Game:
                     status = self.peer.get_game_status()
                     if isinstance(status, dict) and status.get('type') == 'MOVE':
                         # Apply opponent move
-                        self.board.make_move(status['main_row'], status['main_col'], status['sub_row'], status['sub_col'])
-                        self.move_count += 1
-                        self.is_my_turn = True
+                        try:
+                            self.board.make_move(status['main_row'], status['main_col'], status['sub_row'], status['sub_col'])
+                            self.move_count += 1
+                            self.is_my_turn = True
+                            print(f"Applied opponent move: {status['main_row']},{status['main_col']},{status['sub_row']},{status['sub_col']}")
+                        except Exception as e:
+                            print(f"Error applying opponent move: {e}")
+                            import traceback
+                            traceback.print_exc()
+                            # Clear status so we don't retry invalid moves
+                            self.peer.game_status = None
                     # Pause updates are handled via callback updating flags/UI
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:

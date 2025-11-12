@@ -455,16 +455,45 @@ class PeerNetwork:
         print(f"Message handler thread started for {self.username}")
         while self.is_connected and self.peer_connection:
             try:
-                data = self.peer_connection.recv(4096)
-                if not data:
-                    print(f"No data received, disconnecting")
-                    self.handle_disconnect("Opponent disconnected")
+                # First receive the message length (4 bytes)
+                length_data = b''
+                while len(length_data) < 4:
+                    chunk = self.peer_connection.recv(4 - len(length_data))
+                    if not chunk:
+                        print(f"Connection closed while receiving message length")
+                        self.handle_disconnect("Opponent disconnected")
+                        break
+                    length_data += chunk
+                
+                if not length_data or len(length_data) < 4:
                     break
+                    
+                message_len = int.from_bytes(length_data, 'big')
+                if message_len > 1024 * 1024:  # Sanity check: max 1MB
+                    print(f"Invalid message length: {message_len}")
+                    self.handle_disconnect("Invalid message received")
+                    break
+                
+                # Now receive the actual message
+                message_data = b''
+                while len(message_data) < message_len:
+                    chunk = self.peer_connection.recv(min(4096, message_len - len(message_data)))
+                    if not chunk:
+                        print(f"Connection closed while receiving message data")
+                        self.handle_disconnect("Opponent disconnected")
+                        break
+                    message_data += chunk
+                
+                if len(message_data) < message_len:
+                    break
+                
                 try:
-                    message = pickle.loads(data)
+                    message = pickle.loads(message_data)
                     print(f"Received message type: {message.get('type')}")
                 except (pickle.UnpicklingError, EOFError) as e:
                     print(f"Failed to unpickle message: {e}")
+                    import traceback
+                    traceback.print_exc()
                     continue
                 
                 if message.get('type') == 'MOVE':
@@ -566,10 +595,17 @@ class PeerNetwork:
                     break
                 else:
                     print(f"Received unknown message type: {message}")
-            except Exception as e:
-                print(f"Message handling error: {e}")
+            except (ConnectionResetError, BrokenPipeError, OSError) as e:
+                print(f"Connection error: {e}")
                 self.handle_disconnect("Connection error occurred")
                 break
+            except Exception as e:
+                print(f"Message handling error: {e}")
+                import traceback
+                traceback.print_exc()
+                # Don't disconnect on unexpected errors, just log and continue
+                time.sleep(0.1)
+                continue
 
     def handle_disconnect(self, reason="Connection lost"):
         """Handle disconnection with cleanup."""
@@ -591,10 +627,19 @@ class PeerNetwork:
         if self.is_connected and self.peer_connection:
             try:
                 serialized_message = pickle.dumps(message)
-                self.peer_connection.send(serialized_message)
-                print(f"Sent: {message}")
+                # Send message length first (4 bytes)
+                message_len = len(serialized_message)
+                self.peer_connection.sendall(message_len.to_bytes(4, 'big'))
+                # Then send the actual message
+                self.peer_connection.sendall(serialized_message)
+                print(f"Sent: {message.get('type', 'unknown')} ({message_len} bytes)")
+            except (BrokenPipeError, ConnectionResetError, OSError) as e:
+                print(f"Message send error (connection lost): {e}")
+                self.handle_disconnect("Connection lost while sending")
             except Exception as e:
                 print(f"Message send error: {e}")
+                import traceback
+                traceback.print_exc()
                 self.is_connected = False
 
     def get_game_status(self):
