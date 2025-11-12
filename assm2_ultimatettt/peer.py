@@ -500,7 +500,7 @@ class PeerNetwork:
                     print(f"Received move: {message}")
                     if self.on_opponent_move:
                         self.on_opponent_move(message['main_row'], message['main_col'], message['sub_row'], message['sub_col'])
-                    else:
+                    elif self.game:
                         # Legacy behavior with console game
                         result = self.game.receive_move(
                             message['main_row'],
@@ -520,6 +520,16 @@ class PeerNetwork:
                             'winner': result.get('winner'),
                             'is_draw': result.get('is_draw')
                         }
+                    else:
+                        # Network mode: store move in game_status for main loop to process
+                        self.game_status = {
+                            'type': 'MOVE',
+                            'main_row': message['main_row'],
+                            'main_col': message['main_col'],
+                            'sub_row': message['sub_row'],
+                            'sub_col': message['sub_col']
+                        }
+                        print(f"Stored move in game_status for processing")
                 elif message.get('type') == 'GAME_START':
                     first_player = message.get('first_player')
                     print(f"Received GAME_START, first player: {first_player}")

@@ -170,6 +170,8 @@ class Game:
                             self.move_count += 1
                             self.is_my_turn = True
                             print(f"Applied opponent move: {status['main_row']},{status['main_col']},{status['sub_row']},{status['sub_col']}")
+                            # Clear status after successful application
+                            self.peer.game_status = None
                         except Exception as e:
                             print(f"Error applying opponent move: {e}")
                             import traceback
