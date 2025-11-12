@@ -216,7 +216,7 @@ class GameUI:
         if self.opponent_ready_text:
             ready_text = self.small_font.render(self.opponent_ready_text, True, self.GREEN)
             self.screen.blit(ready_text, (panel_rect.centerx - ready_text.get_width() // 2,
-                                          panel_rect.top + 100))
+                                          panel_rect.top + 90))
 
     def pause_menu_button_from_pos(self, pos):
         """Return which pause menu button is clicked, or None"""
