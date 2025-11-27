@@ -338,10 +338,10 @@ class Game:
                         pygame.quit()
                         sys.exit()
                     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                        if self.ui.is_back_to_menu_button_clicked(event.pos):
-                            # Return to menu
-                            self.running = False
-                            return
+                        # if self.ui.is_back_to_menu_button_clicked(event.pos):
+                        #     # Return to menu
+                        #     self.running = False
+                        #     return
                         if self.ui.is_pause_button_clicked(event.pos):
                             self.paused = True
                             self.ui.is_showing_pause_menu = True
@@ -422,12 +422,12 @@ class Game:
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.ui.is_back_to_menu_button_clicked(event.pos):
-                    # Return to menu
-                    if self.network_mode and self.peer:
-                        self.peer.send_quit()
-                    self.running = False
-                    return
+                # if self.ui.is_back_to_menu_button_clicked(event.pos):
+                #     # Return to menu
+                #     if self.network_mode and self.peer:
+                #         self.peer.send_quit()
+                #     self.running = False
+                #     return
                 if self.ui.is_pause_button_clicked(event.pos):
                     # Request network pause
                     if self.network_mode:

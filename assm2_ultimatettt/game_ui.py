@@ -141,22 +141,22 @@ class GameUI:
         self.screen.blit(text, (self.pause_button.centerx - text.get_width() // 2, 
                                 self.pause_button.centery - text.get_height() // 2))
         
-        # Draw back to menu button next to pause button
-        back_button_rect = pygame.Rect(self.width - 240, 10, 110, 40)
-        pygame.draw.rect(self.screen, self.LIGHT_GRAY, back_button_rect)
-        pygame.draw.rect(self.screen, self.BLACK, back_button_rect, 2)
-        back_text = pygame.font.SysFont('Arial', 20).render("Menu", True, self.BLACK)
-        self.screen.blit(back_text, (back_button_rect.centerx - back_text.get_width() // 2,
-                                    back_button_rect.centery - back_text.get_height() // 2))
+        # # Draw back to menu button next to pause button
+        # back_button_rect = pygame.Rect(self.width - 240, 10, 110, 40)
+        # pygame.draw.rect(self.screen, self.LIGHT_GRAY, back_button_rect)
+        # pygame.draw.rect(self.screen, self.BLACK, back_button_rect, 2)
+        # back_text = pygame.font.SysFont('Arial', 20).render("Menu", True, self.BLACK)
+        # self.screen.blit(back_text, (back_button_rect.centerx - back_text.get_width() // 2,
+        #                             back_button_rect.centery - back_text.get_height() // 2))
     
     def is_pause_button_clicked(self, pos):
         """Check if the pause button was clicked"""
         return self.pause_button.collidepoint(pos)
 
-    def is_back_to_menu_button_clicked(self, pos):
-        """Check if back to menu button was clicked"""
-        back_button_rect = pygame.Rect(self.width - 240, 10, 110, 40)
-        return back_button_rect.collidepoint(pos)
+    # def is_back_to_menu_button_clicked(self, pos):
+    #     """Check if back to menu button was clicked"""
+    #     back_button_rect = pygame.Rect(self.width - 240, 10, 110, 40)
+    #     return back_button_rect.collidepoint(pos)
     
     def draw_pause_menu(self):
         """Draw a semi-transparent overlay with pause menu options"""
