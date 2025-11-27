@@ -129,6 +129,21 @@ def main():
                 
                 buttons.append((button_rect, option))
                 button_y += button_height + button_margin
+            
+            # Add Back button
+            back_button_rect = pygame.Rect(width // 2 - button_width // 2, 
+                                          button_y, 
+                                          button_width, 
+                                          button_height)
+            if back_button_rect.collidepoint(mouse_pos):
+                pygame.draw.rect(screen, LIGHT_BLUE, back_button_rect)
+            else:
+                pygame.draw.rect(screen, GRAY, back_button_rect)
+            pygame.draw.rect(screen, BLACK, back_button_rect, 2)
+            back_text = button_font.render("Back", True, BLACK)
+            screen.blit(back_text, (back_button_rect.centerx - back_text.get_width() // 2, 
+                                   back_button_rect.centery - back_text.get_height() // 2))
+            buttons.append((back_button_rect, 'back'))
                 
         elif menu_state == 'agent_vs_agent':
             if first_agent is None:
@@ -167,6 +182,21 @@ def main():
                 
                 buttons.append((button_rect, option))
                 button_y += button_height + button_margin
+            
+            # Add Back button
+            back_button_rect = pygame.Rect(width // 2 - button_width // 2, 
+                                          button_y, 
+                                          button_width, 
+                                          button_height)
+            if back_button_rect.collidepoint(mouse_pos):
+                pygame.draw.rect(screen, LIGHT_BLUE, back_button_rect)
+            else:
+                pygame.draw.rect(screen, GRAY, back_button_rect)
+            pygame.draw.rect(screen, BLACK, back_button_rect, 2)
+            back_text = button_font.render("Back", True, BLACK)
+            screen.blit(back_text, (back_button_rect.centerx - back_text.get_width() // 2, 
+                                   back_button_rect.centery - back_text.get_height() // 2))
+            buttons.append((back_button_rect, 'back'))
                 
         elif menu_state == 'network_name':
             subtitle = button_font.render("Enter your name:", True, BLACK)
@@ -556,14 +586,20 @@ def main():
                                 menu_state = 'main'
 
                         elif menu_state == 'human_vs_ai':
-                            # Start game with human vs selected AI
-                            game.start_game(option)
-                            # After game ends, we'll return to menu
-                            pygame.display.set_caption("Ultimate Tic Tac Toe - Menu")
-                            menu_state = 'main'
+                            if option == 'back':
+                                menu_state = 'main'
+                            else:
+                                # Start game with human vs selected AI
+                                game.start_game(option)
+                                # After game ends, we'll return to menu
+                                pygame.display.set_caption("Ultimate Tic Tac Toe - Menu")
+                                menu_state = 'main'
                             
                         elif menu_state == 'agent_vs_agent':
-                            if first_agent is None:
+                            if option == 'back':
+                                menu_state = 'main'
+                                first_agent = None
+                            elif first_agent is None:
                                 first_agent = option
                             else:
                                 # Start game with two AI agents

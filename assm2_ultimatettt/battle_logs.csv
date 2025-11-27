@@ -588,3 +588,4 @@ Date,Time,Agent_X_Type,Agent_O_Type,Winner,Num_Moves,Game_Duration_Seconds,Final
 2025-05-23,17:13:27,Model,Easy,X,35,17.72,XOXXXX   O XXX XX OXO X  XXOOO   X  OO    X  O  X     OOO      OO      XOO       
 2025-05-23,17:13:58,Easy,Model,X,39,19.91,X OOOO O OXO OO OOXXXOO OO XXO   O  XXX      XXX      XXX  O   XXX      X O      
 2025-05-23,17:14:26,Easy,Model,Draw,48,24.28,X O OO OOXXOOOXXOOXOX O  O XXX      XXXO     XXOOOXO  XOXOOOO OXXX      XXX      
+2025-11-27,13:45:33,Model,Model,X,53,27.8,OXXXXX   OOOXO X X XX  XOOXOO  OXO OXXX   O  OOOX   X XX XXOO X X OO OXXO OXOO O 
